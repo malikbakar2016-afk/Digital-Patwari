@@ -1,0 +1,1352 @@
+<!doctype html><html lang="ur"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#173a73"><meta name="description" content="ڈیجیٹل پٹواری: رقبہ کیلکولیٹر، کنورٹر، وراثت، پٹواری ڈائریکٹری"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><title>ڈیجیٹل پٹواری</title><style>html{color-scheme:light dark}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;600;700&display=swap">
+<style>
+/* Layout: blue header band, 3-column shape grid, tapping a shape opens its calculator with live results */
+:root{
+  --bg:#eef2f8; --card:#ffffff; --ink:#1c2740; --muted:#5d6a85; --line:#d9e0ee;
+  --brand:#2f5fa8; --brand-ink:#ffffff; --good:#1f8a5b; --tl:40%; --ts:60%;
+  --font:'Noto Naskh Arabic','Segoe UI',Tahoma,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111826; --card:#1a2336; --ink:#e8edf8; --muted:#9aa6c2; --line:#2a3550;
+  --brand:#1f3c6e; --brand-ink:#f2f6ff; --good:#4cc790; --tl:72%; --ts:65%; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111826; --card:#1a2336; --ink:#e8edf8; --muted:#9aa6c2; --line:#2a3550;
+  --brand:#1f3c6e; --brand-ink:#f2f6ff; --good:#4cc790; --tl:72%; --ts:65%; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.7;-webkit-text-size-adjust:100%;text-size-adjust:100%;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0}
+.wrap{max-width:560px;margin:0 auto;padding-bottom:32px}
+header{margin-inline:-16px;padding:18px 16px 40px;background:var(--brand);color:var(--brand-ink);display:flex;align-items:center;justify-content:space-between;gap:12px}
+header h1{margin:0;font-size:19px;font-weight:700;line-height:1.4}
+header p{margin:0;font-size:11.5px;opacity:.85}
+.msel{display:flex;flex-direction:column;gap:2px;font-size:11px}
+select,input{font-family:var(--font);font-size:14px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:7px 9px;min-width:0}
+header select{background:rgba(255,255,255,.14);color:var(--brand-ink);border-color:rgba(255,255,255,.35)}
+header select option{color:#1c2740}
+select:focus-visible,input:focus-visible,button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+#home{margin-top:-22px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;
+  font-family:var(--font);color:hsl(var(--h) var(--ts) var(--tl));font-size:13px;font-weight:600;line-height:1.5;min-height:82px;justify-content:center}
+.tile svg{width:34px;height:34px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+.tile:active{transform:scale(.97)}
+.view h2{font-size:17px;margin:16px 0 4px;display:flex;align-items:center;gap:10px}
+.view h2 svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round}
+.back{margin-top:14px;background:#1f8a5b;border:1px solid #1f8a5b;color:#fff;border-radius:10px;padding:5px 14px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:flex;flex-direction:column;font-size:12.5px;color:var(--muted);gap:2px}
+input{width:100%;direction:ltr;text-align:left}
+.unit{margin-bottom:10px}
+.hint{font-size:12px;color:var(--muted);margin:8px 0 0}
+.big{font-size:21px;font-weight:700;color:var(--good);line-height:1.6;margin:0}
+.err{color:#c2412d;margin:0}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .err{color:#ff8f7a}}
+:root[data-theme="dark"] .err{color:#ff8f7a}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+td{padding:6px 4px;border-top:1px solid var(--line)}
+td:last-child{text-align:right;direction:ltr;font-variant-numeric:tabular-nums;font-weight:600}
+.note{font-size:12px;color:var(--muted);margin-top:22px;text-align:center}
+.gh{font-weight:700;color:var(--muted);font-size:13px;margin:14px 0 4px}
+.gh:first-child{margin-top:0}
+.hrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:5px 0;border-top:1px solid var(--line)}
+.step{display:flex;align-items:center;gap:6px}
+.step button{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:20px;line-height:1;cursor:pointer;font-family:var(--font)}
+.step output{min-width:30px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+.itab th{text-align:right;font-weight:600;color:var(--muted);font-size:12px;padding:4px}
+.itab td{vertical-align:top}
+.itab td:nth-child(2){direction:ltr;text-align:center;font-weight:600;white-space:nowrap}
+.itab td:last-child{direction:rtl;text-align:right}
+.itab td:first-child{font-weight:400}
+.itab small{font-size:11px;color:var(--muted);font-weight:400}
+.itab tr.tot td{font-weight:700}
+.nlist{margin:10px 0 0;padding-inline-start:18px;font-size:12.5px;color:var(--muted)}
+:root{--add:#1f8a5b;--sub:#c2412d}
+.rin{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.rin label{text-align:center;font-weight:600;color:var(--ink)}
+.rin input{text-align:center;font-size:20px;font-weight:700;padding:12px 4px;border-radius:12px}
+.acts{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;margin-top:12px}
+.acts2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.btn{border:1px solid transparent;border-radius:12px;padding:10px 14px;font-family:var(--font);font-size:15px;font-weight:700;color:#fff;cursor:pointer;line-height:1.4}
+.btn.add{background:var(--add)}
+.btn.sub{background:var(--sub)}
+.btn.clr{background:var(--card);color:var(--ink);border-color:var(--line);font-size:14px}
+.btn:active{transform:scale(.98)}
+.ent{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.ent:first-child{border-top:0}
+.sg{width:26px;height:26px;flex:none;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:16px;line-height:1}
+.ent .t{flex:1;min-width:0;font-weight:600}
+.ent small{display:block;color:var(--muted);font-size:11px;font-weight:400}
+.del{background:none;border:0;color:var(--muted);font-size:20px;line-height:1;padding:4px 8px;cursor:pointer;font-family:var(--font)}
+.rtot{background:var(--brand);color:var(--brand-ink);border-radius:14px;padding:14px 16px;margin-top:12px}
+.rtot .l{font-size:12.5px;opacity:.85}
+.rtot .b{font-size:21px;font-weight:700;line-height:1.6}
+.rtot .s{font-size:11.5px;opacity:.85;direction:rtl}
+.hh{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.hh:first-child{border-top:0}
+.hh .t{flex:1;min-width:0;font-weight:600}
+.hh small{display:block;color:var(--muted);font-size:11px;font-weight:400}
+.hh button{font-family:var(--font);font-size:12.5px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:4px 10px;cursor:pointer}
+.cvin{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.cvin label{text-align:center;font-weight:600;color:var(--ink);font-size:12.5px}
+.cvin input{text-align:center;font-size:17px;font-weight:700;padding:10px 2px;border-radius:12px}
+.cvc{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:12px}
+.cvc h3{margin:0 0 8px;font-size:14px;text-align:center;color:hsl(var(--h) var(--ts) var(--tl))}
+.obx{display:grid;gap:8px}
+.ob{border:1px solid var(--line);border-radius:12px;padding:6px 4px;text-align:center;background:var(--bg);min-width:0}
+.ob small{display:block;color:var(--muted);font-size:11px;line-height:1.5}
+.ob b{display:block;font-size:17px;font-variant-numeric:tabular-nums;direction:ltr;overflow-wrap:anywhere}
+.cmp{position:relative;overflow:hidden;border-radius:18px;padding:18px 12px 16px;margin-top:12px;color:#fff;text-align:center;
+  background:linear-gradient(180deg,#13202f 0%,#2b2c30 48%,#6a4f33 100%)}
+.cmp::before{content:"";position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,226,160,.32),rgba(255,226,160,0) 70%);pointer-events:none}
+.cmp>*{position:relative}
+.cmdeg{display:flex;flex-direction:column;align-items:center;line-height:1.3;margin-bottom:6px}
+.cmdeg b{font-size:38px;font-weight:700;font-variant-numeric:tabular-nums;direction:ltr;display:inline-block}
+.cmdeg span{font-size:17px;opacity:.9}
+#cmsvg{width:100%;max-width:340px;height:auto;touch-action:none;display:block;margin:0 auto}
+#cmsvg text{font-family:var(--font)}
+.cmst{font-size:12px;opacity:.85;margin:6px 0 10px;min-height:22px}
+.cmp .btn{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.4);color:#fff;font-size:14px;padding:7px 16px}
+.sec{font-weight:700;font-size:13px;color:var(--muted);margin:18px 0 8px;display:flex;align-items:center;gap:10px}
+.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+.top4{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile.big{min-height:96px;flex-direction:row;justify-content:flex-start;gap:10px;padding:12px;text-align:left;border-color:hsl(var(--h) 45% 55% / .5);border-width:1.5px}
+.tile.big svg{width:38px;height:38px;flex:none}
+.tile.big span{display:flex;flex-direction:column;line-height:1.4;font-size:14px;min-width:0}
+.tile.big small{font-size:11px;font-weight:400;color:var(--muted)}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand img{width:46px;height:46px;border-radius:12px;flex:none;box-shadow:0 0 0 1.5px rgba(255,255,255,.55)}
+.brand h1{white-space:nowrap}
+.brand p{display:none}
+.brand h1{font-size:17px}
+.msel select{max-width:112px;padding:7px 6px;font-size:13px}
+.foot-logo{display:block;width:64px;height:64px;border-radius:16px;margin:22px auto 0}
+.hr{display:flex;align-items:flex-end;gap:8px}
+.thm{width:36px;height:36px;border-radius:10px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.14);color:var(--brand-ink);display:grid;place-items:center;cursor:pointer;padding:0}
+.thm svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.cpb{font-family:var(--font);font-size:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:3px 10px;cursor:pointer;min-width:44px}
+.dg{display:flex;justify-content:center;margin:0 0 10px}
+.dg:empty{display:none}
+.dg svg{width:170px;max-width:60%;height:auto;display:block}
+.dg .sh{fill:hsl(var(--h) var(--ts) var(--tl) / .14);stroke:hsl(var(--h) var(--ts) var(--tl));stroke-width:2;stroke-linejoin:round}
+.dg .ds{fill:none;stroke:var(--muted);stroke-width:1.4;stroke-dasharray:4 3}
+.dg .bd{fill:var(--brand);stroke:none}
+.dg .bt{font-family:var(--font);font-size:11px;font-weight:700;fill:#fff;text-anchor:middle;dominant-baseline:central}
+.dg .lb{font-family:var(--font);font-size:11px;font-weight:600;fill:var(--ink);text-anchor:middle;dominant-baseline:central;stroke:var(--card);stroke-width:3;paint-order:stroke}
+.t2{width:100%;border-collapse:collapse;margin-top:10px}
+.t2 td{padding:6px 4px;border-top:1px solid var(--line);vertical-align:top}
+.t2 td:last-child{direction:rtl;text-align:right;font-weight:600}
+.t2 small{display:block;font-size:11px;color:var(--muted);font-weight:400}
+.fm td:first-child{width:38%;font-weight:600}
+.fm td:last-child{direction:ltr;text-align:left;font-weight:400;font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion: reduce){.tile:active,.btn:active{transform:none}}
+/* ===== خوبصورتی کی تہہ ===== */
+:root{
+  --hg1:#173a73;--hg2:#2f68b8;--hg3:#1c9a86;
+  --sh:0 10px 28px -16px rgba(24,48,96,.45);
+  --glow:0 0 0 3px rgba(47,104,184,.18);
+  --bg:#e9f0fa;--card:#ffffff;--line:#d6e0f0;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --hg1:#0f2447;--hg2:#1d4a8a;--hg3:#157a6b;--sh:0 12px 30px -16px rgba(0,0,0,.7);--glow:0 0 0 3px rgba(120,170,255,.25);--bg:#0e1523}}
+:root[data-theme="dark"]{--hg1:#0f2447;--hg2:#1d4a8a;--hg3:#157a6b;--sh:0 12px 30px -16px rgba(0,0,0,.7);--glow:0 0 0 3px rgba(120,170,255,.25);--bg:#0e1523}
+body{background:radial-gradient(900px 420px at 100% -10%,rgba(47,104,184,.10),transparent 60%),radial-gradient(700px 400px at 0% 40%,rgba(28,154,134,.07),transparent 60%),var(--bg);background-attachment:fixed}
+header{position:relative;overflow:hidden;background:linear-gradient(135deg,var(--hg1) 0%,var(--hg2) 55%,var(--hg3) 120%);border-radius:0 0 30px 30px;padding:20px 16px 52px;box-shadow:0 14px 30px -18px rgba(15,36,71,.8)}
+header::before{content:"";position:absolute;width:220px;height:220px;right:-70px;top:-90px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.22),transparent 68%);pointer-events:none}
+header::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;background-image:linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px);background-size:26px 26px;-webkit-mask-image:linear-gradient(180deg,#000,transparent 85%);mask-image:linear-gradient(180deg,#000,transparent 85%)}
+header>*{position:relative;z-index:1}
+.brand img{width:52px;height:52px;border-radius:15px;box-shadow:0 0 0 2px rgba(255,255,255,.7),0 8px 18px -6px rgba(0,0,0,.5)}
+.brand h1{font-size:18px;text-shadow:0 2px 10px rgba(0,0,0,.25)}
+#home{margin-top:-30px}
+.tile{border-radius:18px;box-shadow:var(--sh);background:linear-gradient(180deg,var(--card),color-mix(in srgb,var(--card) 92%,hsl(var(--h) 70% 55%)));border-color:color-mix(in srgb,var(--line) 70%,hsl(var(--h) 60% 60%));transition:transform .15s ease,box-shadow .15s ease}
+.tile:hover{transform:translateY(-2px)}
+.tile svg{width:30px;height:30px;padding:8px;box-sizing:content-box;border-radius:14px;background:hsl(var(--h) 70% 50% / .12);stroke-width:1.7}
+.tile.big{border-width:1px;border-radius:20px;min-height:102px;background:linear-gradient(135deg,var(--card) 40%,color-mix(in srgb,var(--card) 80%,hsl(var(--h) 75% 55%)))}
+.tile.big svg{width:30px;height:30px;padding:10px;border-radius:16px;background:linear-gradient(135deg,hsl(var(--h) 70% 50% / .20),hsl(var(--h) 70% 50% / .08))}
+.tile.big span{font-size:14.5px}
+.sec{font-size:13.5px;color:var(--ink);margin:22px 0 10px}
+.sec::before{content:"";width:5px;height:16px;border-radius:3px;background:linear-gradient(180deg,var(--hg2),var(--hg3))}
+.sec::after{background:linear-gradient(90deg,var(--line),transparent)}
+.view:not([hidden]),#home:not([hidden]){animation:rise .32s cubic-bezier(.2,.7,.2,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.view h2{font-size:18px;margin:18px 0 6px}
+.panel,.cvc{border-radius:20px;box-shadow:var(--sh);padding:16px}
+input,select{border-radius:12px;padding:9px 11px;transition:box-shadow .15s,border-color .15s}
+input:focus,select:focus{outline:none;border-color:var(--hg2);box-shadow:var(--glow)}
+.back{background:linear-gradient(135deg,#1f8a5b,#17a06b);border:0;border-radius:999px;padding:7px 18px;box-shadow:0 8px 16px -10px #1f8a5b}
+.btn{border-radius:14px}
+.btn.add{background:linear-gradient(135deg,#1f8a5b,#19a870);box-shadow:0 10px 18px -12px #1f8a5b}
+.btn.sub{background:linear-gradient(135deg,#c2412d,#dd5a3f);box-shadow:0 10px 18px -12px #c2412d}
+.rtot{background:linear-gradient(135deg,var(--hg1),var(--hg2) 60%,var(--hg3) 130%);border-radius:20px;box-shadow:var(--sh)}
+p.big{background:linear-gradient(90deg,var(--good),var(--hg3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-size:23px}
+table td{padding:8px 4px}
+.cmp{border-radius:24px;box-shadow:var(--sh)}
+.thm{border-radius:12px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+header select{border-radius:12px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.ent{padding:10px 0}
+.about{margin:20px auto 0;padding:12px 14px;text-align:center;border-radius:18px;background:linear-gradient(135deg,var(--hg1),var(--hg2) 65%,var(--hg3) 140%);color:#fff;box-shadow:var(--sh);position:relative;overflow:hidden}
+.about::before{content:"";position:absolute;width:200px;height:200px;left:-60px;bottom:-110px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.2),transparent 70%)}
+.about>*{position:relative}
+.about img{width:44px;height:44px;border-radius:12px;box-shadow:0 0 0 2px rgba(255,255,255,.7),0 10px 22px -8px rgba(0,0,0,.5)}
+.about h3{margin:4px 0 0;font-size:14px}
+.about .ab-s{margin:0 0 4px;font-size:11px;opacity:.85}
+.ab-c{display:flex;flex-direction:column;gap:0;font-size:11.5px;line-height:1.6;opacity:.95}
+@media (prefers-reduced-motion: reduce){.view:not([hidden]),#home:not([hidden]){animation:none}.tile:hover{transform:none}}
+
+</style>
+
+<div class="wrap" dir="ltr" lang="ur">
+  <header>
+    <div class="brand"><img src="data:image/webp;base64,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" alt="ڈیجیٹل پٹواری" width="46" height="46"><div><h1>ڈیجیٹل پٹواری</h1><p>رقبہ نکالیں، مرلہ اور کنال میں</p></div></div>
+    <div class="hr">
+      <label class="msel">1 مرلہ
+        <select id="marla" aria-label="مرلے کا سائز">
+          <option value="272.25">272.25 فٹ</option>
+          <option value="272">272 فٹ</option>
+          <option value="225">225 فٹ</option>
+        </select>
+      </label>
+      <button class="thm" id="theme" type="button" aria-label="رنگ کا انداز بدلیں"></button>
+    </div>
+  </header>
+
+  <main id="home" aria-label="ٹولز"></main>
+
+  <section id="view" class="view" hidden>
+    <button class="back" id="back" type="button">← واپس</button>
+    <h2 id="vtitle"></h2>
+    <div class="panel">
+      <div class="dg" id="vdg"></div>
+      <label class="unit">لمبائی کی اکائی
+        <select id="lu"><option value="1">فٹ</option><option value="3">گز</option><option value="3.28084">میٹر</option><option value="0.0833333">انچ</option></select>
+      </label>
+      <div class="row" id="fields"></div>
+      <p class="hint" id="vhint"></p>
+    </div>
+    <div class="panel" id="result"></div>
+  </section>
+
+  <section id="raqview" class="view" hidden>
+    <button class="back" id="rback" type="button">← واپس</button>
+    <h2>رقبہ کیلکولیٹر</h2>
+    <div class="panel">
+      <div class="rin">
+        <label>کنال<input id="rk" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+        <label>مرلہ<input id="rm" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+        <label>فٹ<input id="rf" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+      </div>
+      <div class="acts">
+        <button class="btn add" id="radd" type="button">+ جمع</button>
+        <button class="btn sub" id="rsub" type="button">− منفی</button>
+        <button class="btn clr" id="rclr" type="button" aria-label="سب صاف کریں">✕</button>
+      </div>
+    </div>
+    <div class="panel" id="rlist"></div>
+    <div class="rtot" id="rtot"></div>
+    <div class="acts2">
+      <button class="btn clr" id="rsave" type="button">محفوظ کریں</button>
+      <button class="btn clr" id="rhist" type="button">محفوظ شدہ</button>
+    </div>
+    <div class="panel" id="rh" hidden></div>
+  </section>
+
+  <section id="cvview" class="view" hidden>
+    <button class="back" id="cback" type="button">← واپس</button>
+    <h2>رقبہ کنورٹر</h2>
+    <div class="panel">
+      <div class="cvin">
+        <label>ایکڑ<input id="ca" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+        <label>کنال<input id="ck" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+        <label>مرلہ<input id="cm" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+        <label>فٹ<input id="cf" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+      </div>
+      <p class="hint">جو خانے چاہیں بھریں، سب جمع ہو کر نیچے ہر اکائی میں آ جائیں گے۔ 1 ایکڑ = 8 کنال = 160 مرلہ۔</p>
+      <div class="acts2"><button class="btn clr" id="cclr" type="button">صاف کریں</button><span></span></div>
+    </div>
+    <div id="cvres"></div>
+  </section>
+
+  <section id="cmpview" class="view" hidden>
+    <button class="back" id="cmback" type="button">← واپس</button>
+    <h2>کمپاس</h2>
+    <div class="cmp">
+      <div class="cmdeg"><b id="cmdeg">0°</b><span id="cmdir">شمال</span></div>
+      <svg id="cmsvg" viewBox="0 0 320 320" role="img" aria-label="کمپاس کا ڈائل"></svg>
+      <p class="cmst" id="cmst"></p>
+      <button class="btn" id="cmgo" type="button">سینسر چلائیں</button>
+    </div>
+    <p class="hint">فون کو زمین کے برابر سیدھا رکھیں اور مقناطیس یا دھاتی چیزوں سے دور رکھیں۔ درست ریڈنگ کے لیے فون کو ہوا میں آٹھ (8) کی شکل میں گھما کر کیلیبریٹ کر لیں۔</p>
+  </section>
+
+  <section id="splview" class="view" hidden>
+    <button class="back gback" type="button">← واپس</button>
+    <h2>پلاٹ تقسیم</h2>
+    <div class="panel">
+      <div class="rin">
+        <label>کنال<input id="spk" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+        <label>مرلہ<input id="spm" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+        <label>فٹ<input id="spf" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <label>طریقہ<select id="spmode"><option value="eq">برابر حصوں میں</option><option value="ra">نسبت سے</option></select></label>
+        <label id="spnl">حصوں کی تعداد<input id="spn" type="number" inputmode="numeric" min="2" step="1" value="2"></label>
+        <label id="sprl" hidden>نسبت (جیسے 1:2:3)<input id="spr" type="text" value="1:2"></label>
+      </div>
+    </div>
+    <div class="panel" id="splres"></div>
+  </section>
+
+  <section id="trview" class="view" hidden>
+    <button class="back gback" type="button">← واپس</button>
+    <h2>مثلث +</h2>
+    <div class="panel">
+      <label class="unit">لمبائی کی اکائی<select id="tru"><option value="1">فٹ</option><option value="3">گز</option><option value="3.28084">میٹر</option><option value="0.0833333">انچ</option></select></label>
+      <div class="rin">
+        <label>ضلع 1<input id="tra" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+        <label>ضلع 2<input id="trb" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+        <label>ضلع 3<input id="trc" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+      </div>
+      <p class="err" id="trerr" style="margin:8px 0 0;font-size:12.5px"></p>
+      <div class="acts2"><button class="btn add" id="tradd" type="button">+ مثلث شامل کریں</button><button class="btn clr" id="trclr" type="button">سب صاف</button></div>
+      <p class="hint">بے ترتیب زمین کو مثلثوں میں بانٹیں، ہر مثلث کی تین اطراف لکھ کر شامل کریں۔ کل رقبہ خود جمع ہو جائے گا۔</p>
+    </div>
+    <div class="panel" id="trlist"></div>
+    <div class="rtot" id="trtot"></div>
+  </section>
+
+  <section id="feeview" class="view" hidden>
+    <button class="back gback" type="button">← واپس</button>
+    <h2>انتقال اور رجسٹری فیس</h2>
+    <div class="panel">
+      <div class="row">
+        <label>جائیداد کی قیمت (روپے)<input id="fe_price" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+        <label>سرکاری ویلیو (اگر ہو)<input id="fe_dc" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <label>اسٹامپ ڈیوٹی %<input id="fe_stamp" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+        <label>کیپیٹل ویلیو ٹیکس %<input id="fe_cvt" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+        <label>رجسٹریشن فیس %<input id="fe_reg" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+        <label>دیگر ٹیکس %<input id="fe_tax" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+      </div>
+      <label style="margin-top:10px">مقررہ اخراجات (روپے)<input id="fe_fix" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+      <p class="hint">شرحیں صوبے اور سال کے مطابق بدلتی رہتی ہیں، اس لیے سرکاری شرح خود لکھیں۔ یہ اسی فون میں یاد رہیں گی۔ فیس قیمت اور سرکاری ویلیو میں سے زیادہ رقم پر لگتی ہے۔</p>
+    </div>
+    <div class="panel" id="feeres"></div>
+  </section>
+
+  <section id="bldview" class="view" hidden>
+    <button class="back gback" type="button">← واپس</button>
+    <h2>تعمیراتی لاگت</h2>
+    <div class="panel">
+      <div class="row">
+        <label>پلاٹ کنال<input id="bd_k" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+        <label>پلاٹ مرلہ<input id="bd_m" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+        <label>منزلیں<input id="bd_n" type="number" inputmode="numeric" min="1" step="1" value="1"></label>
+        <label>ڈھکا ہوا حصہ %<input id="bd_c" type="number" inputmode="decimal" min="0" step="any" value="100"></label>
+        <label>ڈھانچے کا ریٹ (روپے فی فٹ)<input id="bd_g" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+        <label>فنشنگ کا ریٹ (روپے فی فٹ)<input id="bd_f" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+      </div>
+      <p class="hint">ریٹ اپنے علاقے کے مطابق لکھیں۔ ڈھکا ہوا رقبہ = پلاٹ × ڈھکا حصہ % × منزلیں۔</p>
+    </div>
+    <div class="panel" id="bldres"></div>
+  </section>
+
+  <section id="gpview" class="view" hidden>
+    <button class="back gback" type="button">← واپس</button>
+    <h2>GPS سے زمین کی پیمائش</h2>
+    <div class="panel">
+      <p class="err" style="margin:0 0 10px;font-weight:600">GPS پیمائش پر کام جاری ہے، جلد اپڈیٹ میں شامل ہوگی۔</p>
+      <p class="hint" style="margin:0 0 10px">زمین کے ہر کونے پر کھڑے ہو کر "نقطہ لگائیں" دبائیں۔ رقبے کے لیے کم از کم 3 نقطے چاہییں۔ نقطے ترتیب سے لگائیں۔</p>
+      <div class="acts2"><button class="btn add" id="gpadd" type="button">نقطہ لگائیں</button><button class="btn clr" id="gpclr" type="button">سب صاف</button></div>
+      <p class="hint" id="gpst"></p>
+    </div>
+    <div class="panel" id="gplist"></div>
+    <div class="rtot" id="gptot"></div>
+  </section>
+
+  <section id="fmview" class="view" hidden>
+    <button class="back gback" type="button">← واپس</button>
+    <h2>فارمولے</h2>
+    <div class="panel"><div id="fmbox"></div></div>
+  </section>
+
+  <section id="ptview" class="view" hidden>
+    <button class="back gback" type="button">← واپس</button>
+    <h2>پٹواری ڈائریکٹری</h2>
+    
+    <div class="panel">
+      <div class="row">
+        <label>تحصیل<select id="pto"><option value="">تحصیل منتخب کریں</option><option value="تحصیل آفس لیہ">تحصیل آفس لیہ</option></select></label>
+        <label>تلاش (نام، عہدہ، نمبر)<input id="ptq" type="text" placeholder="تلاش کریں"></label>
+      </div>
+    </div>
+    <div class="panel" id="ptres"></div>
+  </section>
+
+  <section id="inhview" class="view" hidden>
+    <button class="back" id="iback" type="button">← واپس</button>
+    <h2>وراثت کیلکولیٹر</h2>
+    <div class="panel">
+      <div class="row">
+        <label id="iestl">کل ترکہ<input id="iest" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+        <label>اکائی<select id="iunit"><option value="area" selected>رقبہ (کنال، مرلہ، فٹ)</option><option value="pkr">روپے</option><option value="marla">مرلہ</option><option value="kanal">کنال</option><option value="sqft">مربع فٹ</option></select></label>
+      </div>
+      <div id="iarea" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+        <label>کنال<input id="ik" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+        <label>مرلہ<input id="im" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+        <label>فٹ<input id="if" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+      </div>
+      <p class="hint">کفن دفن، قرض اور وصیت نکالنے کے بعد باقی ترکہ لکھیں۔ خالی چھوڑیں تو صرف حصے دکھیں گے۔</p>
+    </div>
+    <div class="panel">
+      <label class="unit">مرحوم
+        <select id="ig"><option value="m">مرد</option><option value="f">عورت</option></select>
+      </label>
+      <div id="iform"></div>
+    </div>
+    <div class="panel" id="iresult"></div>
+  </section>
+
+  <div class="about">
+    <img src="data:image/webp;base64,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" alt="" width="44" height="44">
+    <h3>ڈیجیٹل پٹواری</h3>
+    <p class="ab-s" dir="rtl">1 کنال = 20 مرلہ</p>
+    <div class="ab-c"><span dir="ltr">malikbakar2016@gmail.com</span><span dir="ltr">+923012342526</span><span>ضلع لیہ، پنجاب</span></div>
+  </div>
+</div>
+
+<script>
+var SQM=10.7639;
+var marlaSq=272.25;
+try{var sv=localStorage.getItem('marlaSq'); if(sv){marlaSq=parseFloat(sv);document.getElementById('marla').value=sv;}}catch(e){}
+
+function heron(a,b,c){
+  if(a<=0||b<=0||c<=0) return null;
+  if(a+b<=c||a+c<=b||b+c<=a) return null;
+  var s=(a+b+c)/2; return Math.sqrt(s*(s-a)*(s-b)*(s-c));
+}
+var SH=[
+ {id:'tri',n:'مثلث',h:140,ic:'<path d="M12 4 21 19H3Z"/>',f:['ضلع 1','ضلع 2','ضلع 3'],hint:'تصویر کے مطابق تینوں اطراف کی ناپ لکھیں۔',
+  calc:function(v){var r=heron(v[0],v[1],v[2]);return r===null?'یہ تین اطراف مل کر مثلث نہیں بناتے':r;}},
+ {id:'rect',n:'مستطیل',h:220,ic:'<rect x="3" y="6" width="18" height="12"/>',f:['لمبائی','چوڑائی'],hint:'',
+  calc:function(v){return v[0]*v[1];}},
+ {id:'sq',n:'چکور',h:265,ic:'<rect x="5" y="5" width="14" height="14"/>',f:['ایک ضلع'],hint:'',
+  calc:function(v){return v[0]*v[0];}},
+ {id:'quad',n:'غیر منتظم چار اطراف',h:330,ic:'<path d="M4 6 19 4 21 18 7 20Z"/>',f:['ضلع 1','ضلع 2','ضلع 3','ضلع 4','درمیانی وتر'],hint:'تصویر دیکھیں: ضلع 1 اور 2 وتر کے ایک طرف، ضلع 3 اور 4 دوسری طرف۔',
+  calc:function(v){var a=heron(v[0],v[1],v[4]),b=heron(v[2],v[3],v[4]);return(a===null||b===null)?'ناپ درست نہیں، وتر چیک کریں':a+b;}},
+ {id:'para',n:'متوازی',h:150,ic:'<path d="M7 6H21L17 18H3Z"/>',f:['قاعدہ','عمودی اونچائی'],hint:'اونچائی وہ جو سیدھی عمودی ہو، ترچھا ضلع نہیں۔',
+  calc:function(v){return v[0]*v[1];}},
+ {id:'trap',n:'ذوزنقہ',h:30,ic:'<path d="M7 6H17L21 18H3Z"/>',f:['متوازی ضلع 1','متوازی ضلع 2','عمودی اونچائی'],hint:'',
+  calc:function(v){return (v[0]+v[1])/2*v[2];}},
+ {id:'circ',n:'دائرہ',h:320,ic:'<circle cx="12" cy="12" r="8"/>',f:['رداس (ریڈیس)'],hint:'رداس قطر کا آدھا ہوتا ہے۔',
+  calc:function(v){return Math.PI*v[0]*v[0];}},
+ {id:'pent',n:'مخمس',h:280,ic:'<path d="M12 3 21 10 17.5 20H6.5L3 10Z"/>',f:['ایک ضلع'],hint:'پانچوں اطراف برابر والی شکل۔',
+  calc:function(v){return 0.25*Math.sqrt(5*(5+2*Math.sqrt(5)))*v[0]*v[0];}},
+ {id:'rho',n:'رومبس',h:340,ic:'<path d="M12 3 21 12 12 21 3 12Z"/>',f:['وتر 1','وتر 2'],hint:'',
+  calc:function(v){return v[0]*v[1]/2;}},
+ {id:'sec',n:'سیکٹر',h:25,ic:'<path d="M4 20V6a14 14 0 0 1 14 14Z"/>',f:['رداس','زاویہ (ڈگری)'],hint:'',
+  calc:function(v){return v[1]>360?'زاویہ 360 سے زیادہ نہیں ہو سکتا':Math.PI*v[0]*v[0]*v[1]/360;}},
+ {id:'oval',n:'اوول',h:215,ic:'<ellipse cx="12" cy="12" rx="9" ry="6"/>',f:['لمبا رداس','چھوٹا رداس'],hint:'',
+  calc:function(v){return Math.PI*v[0]*v[1];}},
+ {id:'pt',g:'top',o:5,open:'openPt',sub:'تحصیل کے عملے کے نمبر',n:'پٹواری ڈائریکٹری',h:15,ic:'<circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M16 6h5M16 10h5M17 14h4"/>',f:[]},
+ {id:'side',g:'top',o:4,sub:'پلاٹ کی دوسری سائڈ نکالیں',n:'سائز',h:175,ic:'<rect x="3" y="4" width="18" height="16"/><path d="M3 15H21" stroke-dasharray="3 2"/>',side:true,f:['کنال','مرلہ','سائڈ 1'],hint:'کنال یا مرلہ اور ایک سائڈ لکھیں، دوسری سائڈ خود نکل آئے گی۔',
+  calc:function(){return 0;}},
+ {id:'cmp',g:'more',n:'کمپاس',h:190,ic:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5 13.5 13.5 8.5 15.5 10.5 10.5Z"/>',cmp:true,f:[]},
+ {id:'cv',g:'top',o:2,sub:'ایکڑ، کنال، مرلہ، فٹ',n:'رقبہ کنورٹر',h:170,ic:'<rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/><path d="M14 7h6M17 4l3 3-3 3M10 17H4M7 14l-3 3 3 3"/>',cv:true,f:[]},
+ {id:'raq',g:'top',o:1,sub:'جمع، منفی اور محفوظ',n:'رقبہ کیلکولیٹر',h:200,ic:'<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 9h6M11 6v6M8 17h8"/>',raq:true,f:[]},
+ {id:'inh',g:'top',o:3,sub:'شرعی حصے، رقبے میں',n:'وراثت',h:350,ic:'<circle cx="6" cy="19" r="2.2"/><circle cx="12" cy="19" r="2.2"/><circle cx="18" cy="19" r="2.2"/><path d="M12 4v7M6 17v-3a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3v3"/>',inh:true,f:[]},
+ {id:'spl',g:'more',open:'openSpl',n:'پلاٹ تقسیم',h:100,ic:'<rect x="3" y="4" width="18" height="16" rx="1"/><path d="M12 4v16M3 12h9"/>',f:[]},
+ {id:'tr',g:'more',open:'openTr',n:'مثلث +',h:160,ic:'<path d="M12 4 21 19H3Z"/><path d="M12 10v5M9.5 12.5h5"/>',f:[]},
+ {id:'fee',g:'more',open:'openFee',n:'انتقال فیس',h:300,ic:'<path d="M6 3h9l4 4v14H6Z"/><path d="M9 11h7M9 15h7M9 7h3"/>',f:[]},
+ {id:'bld',g:'more',open:'openBld',n:'تعمیراتی لاگت',h:30,ic:'<path d="M3 20h18M5 20V9l7-5 7 5v11"/><path d="M10 20v-6h4v6"/>',f:[]},
+ {id:'gps',g:'more',open:'openGps',n:'GPS پیمائش (جلد)',h:195,ic:'<path d="M12 21s7-6.2 7-11a7 7 0 0 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/>',f:[]},
+ {id:'fm',g:'more',open:'openFm',n:'فارمولے',h:250,ic:'<path d="M18 5H6l7 7-7 7h12"/>',f:[]},
+ {id:'unit',g:'more',n:'یونٹ',h:20,ic:'<path d="M4 9H18M15 6l3 3-3 3M20 15H6M9 12l-3 3 3 3"/>',unit:true,f:['رقبہ'],hint:''}
+];
+
+var UNITS=function(){return[
+  ['مربع فٹ',1],['مرلہ',marlaSq],['کنال',20*marlaSq],
+  ['مربع گز',9],['مربع میٹر',SQM],['ایکڑ',43560]];};
+
+var home=document.getElementById('home'),view=document.getElementById('view');
+var cur=null;
+
+[['top','','top4'],['shape','شکلوں سے رقبہ','grid'],['more','مزید ٹولز','grid']].forEach(function(g){
+  var items=SH.filter(function(s){return (s.g||'shape')===g[0];});
+  items.sort(function(a,b){return (a.o||0)-(b.o||0);});
+  if(g[1]){var hd=document.createElement('div');hd.className='sec';hd.textContent=g[1];home.appendChild(hd);}
+  var box=document.createElement('div');box.className=g[2];
+  items.forEach(function(s){
+    var b=document.createElement('button');b.type='button';b.className='tile'+(g[0]==='top'?' big':'');b.style.setProperty('--h',s.h);
+    b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true">'+s.ic+'</svg><span>'+s.n+(s.sub?'<small>'+s.sub+'</small>':'')+'</span>';
+    b.onclick=function(){
+      if(s.open){window[s.open]();}
+      else if(s.inh){openInh();}else if(s.raq){openRaq();}else if(s.cv){openCv();}else if(s.cmp){openCmp();}
+      else{open_(s);}
+    };
+    box.appendChild(b);
+  });
+  home.appendChild(box);
+});
+
+function fmt(n,d){return n.toLocaleString('en-US',{maximumFractionDigits:d===undefined?2:d});}
+
+function open_(s){
+  cur=s;
+  home.hidden=true;view.hidden=false;
+  var t=document.getElementById('vtitle');
+  t.style.color='hsl('+s.h+' var(--ts) var(--tl))';
+  t.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true">'+s.ic+'</svg>'+s.n;
+  document.getElementById('vhint').textContent=s.hint;
+  var dgE=document.getElementById('vdg');dgE.style.setProperty('--h',s.h);dgE.innerHTML=DG[s.id]||'';
+  var f=document.getElementById('fields');f.innerHTML='';
+  var lu=document.getElementById('lu');
+  if(s.unit){
+    lu.parentNode.hidden=true;
+    var u=UNITS();
+    f.innerHTML='<label>رقبہ<input id="f0" type="number" inputmode="decimal" min="0" step="any" value="1"></label>'+
+      '<label>اکائی<select id="fu">'+u.map(function(x,i){return '<option value="'+i+'">'+x[0]+'</option>';}).join('')+'</select></label>';
+    s._sel=1;document.getElementById('fu').value='1';
+  }else{
+    lu.parentNode.hidden=false;
+    s.f.forEach(function(name,i){
+      var l=document.createElement('label');l.textContent=name;
+      var inp=document.createElement('input');inp.type='number';inp.inputMode='decimal';inp.min='0';inp.step='any';inp.id='f'+i;inp.placeholder='0';
+      l.appendChild(inp);f.appendChild(l);
+    });
+  }
+  f.querySelectorAll('input,select').forEach(function(e){e.addEventListener('input',calc);});
+  calc();
+  window.scrollTo(0,0);
+}
+
+function table(sq){
+  var h='<p class="big">'+breakFt(sq)+'</p><table>';
+  UNITS().forEach(function(u){h+='<tr><td>'+u[0]+'</td><td>'+fmt(sq/u[1],u[0]==='ایکڑ'?4:2)+'</td></tr>';});
+  return h+'</table>';
+}
+
+function calc(){
+  var s=cur,r=document.getElementById('result');
+  if(!s)return;
+  if(s.unit){
+    var val=parseFloat(document.getElementById('f0').value);
+    var idx=parseInt(document.getElementById('fu').value,10);
+    if(!(val>=0)){r.innerHTML='<p class="hint">رقبہ لکھیں۔</p>';return;}
+    r.innerHTML=table(val*UNITS()[idx][1]);return;
+  }
+  if(s.side){
+    var kk=parseFloat(document.getElementById('lu').value);
+    var kn=parseFloat(document.getElementById('f0').value)||0,ml=parseFloat(document.getElementById('f1').value)||0,s1=parseFloat(document.getElementById('f2').value);
+    if(!(s1>0)||!(kn>0||ml>0)){r.innerHTML='<p class="hint">کنال یا مرلہ، اور سائڈ 1 لکھیں۔</p>';return;}
+    var ar=(kn*20+ml)*marlaSq,s2ft=ar/(s1*kk);
+    var lus=document.getElementById('lu'),nm=lus.options[lus.selectedIndex].text;
+    var ft=Math.floor(s2ft+1e-9),inch=(s2ft-ft)*12;
+    r.innerHTML='<p class="big">سائڈ 2 = '+fmt(s2ft/kk,2)+' '+nm+'</p><table>'+
+      '<tr><td>سائڈ 2 فٹ اور انچ میں</td><td>'+ft+' فٹ '+fmt(inch,1)+' انچ</td></tr>'+
+      '<tr><td>کل رقبہ (مربع فٹ)</td><td>'+fmt(ar,2)+'</td></tr></table>'+
+      '<p class="hint">فارمولا: (مرلہ سائز × مرلہ) ÷ سائڈ 1، مرلہ سائز '+fmt(marlaSq,2)+' مربع فٹ</p>';
+    return;
+  }
+  var k=parseFloat(document.getElementById('lu').value),v=[],ok=true;
+  s.f.forEach(function(_,i){
+    var x=parseFloat(document.getElementById('f'+i).value);
+    if(!(x>0)){ok=false;}
+    v.push(s.id==='sec'&&i===1?x:x*k);
+  });
+  if(!ok){r.innerHTML='<p class="hint">تمام خانے بھریں، نتیجہ خود بخود آ جائے گا۔</p>';return;}
+  var a=s.calc(v);
+  if(typeof a==='string'){r.innerHTML='<p class="err">'+a+'</p>';return;}
+  r.innerHTML=table(a);
+}
+
+document.getElementById('lu').addEventListener('input',calc);
+document.getElementById('back').onclick=function(){cur=null;view.hidden=true;home.hidden=false;};
+document.getElementById('marla').addEventListener('input',function(e){
+  marlaSq=parseFloat(e.target.value);
+  try{localStorage.setItem('marlaSq',e.target.value);}catch(x){}
+  if(cur&&cur.unit){var u=UNITS(),sel=document.getElementById('fu');}
+  calc();
+  if(!document.getElementById('inhview').hidden)ihShow();
+  if(!document.getElementById('raqview').hidden)raqRender();
+  if(!document.getElementById('cvview').hidden)cvRender();
+  ['splview:splRender','trview:trRender','feeview:feeRender','bldview:bldRender','gpview:gpRender','fmview:fmRender'].forEach(function(p){
+    var a=p.split(':');if(!document.getElementById(a[0]).hidden)window[a[1]]();
+  });
+});
+
+/* ================= وراثت (حنفی فقہ) ================= */
+function gcd(a,b){return b?gcd(b,a%b):Math.abs(a);}
+function fr(n,d){if(d===undefined)d=1;if(d<0){n=-n;d=-d;}var g=gcd(n,d)||1;return{n:n/g,d:d/g};}
+function fadd(a,b){return fr(a.n*b.d+b.n*a.d,a.d*b.d);}
+function fsub(a,b){return fr(a.n*b.d-b.n*a.d,a.d*b.d);}
+function fmul(a,b){return fr(a.n*b.n,a.d*b.d);}
+function fdiv(a,b){return fr(a.n*b.d,a.d*b.n);}
+function fgt(a,b){return a.n*b.d>b.n*a.d;}
+function fz(a){return a.n===0;}
+function fnum(a){return a.n/a.d;}
+function fstr(a){return a.d===1?String(a.n):a.n+'/'+a.d;}
+
+var IH_GROUPS=[
+ ['شریکِ حیات',[['husband','شوہر',1],['wife','بیوی',4]]],
+ ['اولاد',[['son','بیٹا',30],['dau','بیٹی',30],['gson','پوتا (بیٹے کا بیٹا)',30],['gdau','پوتی (بیٹے کی بیٹی)',30]]],
+ ['والدین اور اجداد',[['father','باپ',1],['mother','ماں',1],['gfather','دادا',1],['gmp','دادی (باپ کی ماں)',1],['gmm','نانی (ماں کی ماں)',1]]],
+ ['بہن بھائی',[['fbro','سگا بھائی',30],['fsis','سگی بہن',30],['pbro','باپ شریک بھائی',30],['psis','باپ شریک بہن',30],['ubro','ماں شریک بھائی',30],['usis','ماں شریک بہن',30]]],
+ ['دور کے عصبہ',[['fnephew','سگے بھائی کا بیٹا',30],['pnephew','باپ شریک بھائی کا بیٹا',30],['funcle','سگا چچا',30],['puncle','باپ شریک چچا',30],['fcousin','سگے چچا کا بیٹا',30],['pcousin','باپ شریک چچا کا بیٹا',30]]]
+];
+var IH={},IHN={},IHMAX={},ihMale=true;
+IH_GROUPS.forEach(function(g){g[1].forEach(function(x){IH[x[0]]=0;IHN[x[0]]=x[1];IHMAX[x[0]]=x[2];});});
+
+function ihCalc(h,male){
+  var res={rows:[],blocked:[],notes:[],err:null};
+  var any=false;for(var q in h){if(h[q]>0)any=true;}
+  if(!any){res.err='کم از کم ایک وارث منتخب کریں۔';return res;}
+  var P=function(k){return h[k]>0;};
+  var blk={};
+  var B=function(k,why){if(P(k)&&!blk[k])blk[k]=why;};
+  var A=function(k){return P(k)&&!blk[k];};
+  var maleDesc=P('son')||P('gson');
+  var desc=maleDesc||P('dau')||P('gdau');
+  var sib=h.fbro+h.fsis+h.pbro+h.psis+h.ubro+h.usis;
+  var far=['fnephew','pnephew','funcle','puncle','fcousin','pcousin'];
+  var sibs=['fbro','fsis','pbro','psis','ubro','usis'];
+
+  /* محجوب ہونے کے قاعدے */
+  if(P('son')){B('gson','بیٹا موجود ہے');B('gdau','بیٹا موجود ہے');}
+  if(P('father')){B('gfather','باپ موجود ہے');B('gmp','باپ موجود ہے');}
+  if(P('mother')){B('gmp','ماں موجود ہے');B('gmm','ماں موجود ہے');}
+  var anc=P('father')?'باپ موجود ہے':(A('gfather')?'دادا موجود ہے':null);
+  if(anc){sibs.concat(far).forEach(function(k){B(k,anc);});}
+  if(maleDesc){['fbro','fsis','pbro','psis'].concat(far).forEach(function(k){B(k,'بیٹا یا پوتا موجود ہے');});}
+  if(desc){B('ubro','اولاد موجود ہے');B('usis','اولاد موجود ہے');}
+  if(A('fbro')){B('pbro','سگا بھائی موجود ہے');B('psis','سگا بھائی موجود ہے');}
+  var fsA=A('fsis')&&!A('fbro')&&(P('dau')||P('gdau'));
+  if(fsA){B('pbro','سگی بہن عصبہ بنی ہے');B('psis','سگی بہن عصبہ بنی ہے');}
+  if(A('fsis')&&h.fsis>=2&&!A('fbro')&&!fsA&&!A('pbro')){B('psis','دو یا زیادہ سگی بہنیں پورا دو تہائی لے رہی ہیں');}
+  var psA=A('psis')&&!A('pbro')&&!A('fsis')&&(P('dau')||P('gdau'));
+  var strong=P('son')||P('gson')||P('father')||A('gfather')||A('fbro')||A('pbro')||fsA||psA;
+  if(strong){far.forEach(function(k){B(k,'قریبی عصبہ موجود ہے');});}
+  else{var first=null;far.forEach(function(k){if(A(k)){if(first){B(k,'قریبی عصبہ موجود ہے');}else{first=k;}}});}
+
+  /* مقررہ حصے */
+  var sh={};
+  var addS=function(k,f){sh[k]=sh[k]?fadd(sh[k],f):f;};
+  var sp=fr(0);
+  if(!male&&P('husband')){sp=desc?fr(1,4):fr(1,2);addS('husband',sp);}
+  if(male&&P('wife')){sp=desc?fr(1,8):fr(1,4);addS('wife',sp);}
+  if(P('mother')){
+    var ms;
+    if(desc||sib>=2){ms=fr(1,6);}
+    else if(P('father')&&!fz(sp)){ms=fmul(fsub(fr(1),sp),fr(1,3));res.notes.push('ماں کو شریکِ حیات کے بعد بچی ہوئی رقم کا ایک تہائی دیا گیا (مسئلہ عمریتین)۔');}
+    else{ms=fr(1,3);}
+    addS('mother',ms);
+  }
+  var gm=[];if(A('gmp'))gm.push('gmp');if(A('gmm'))gm.push('gmm');
+  gm.forEach(function(k){addS(k,fr(1,6*gm.length));});
+  var asc=P('father')?'father':(A('gfather')?'gfather':null);
+  if(asc&&desc)addS(asc,fr(1,6));
+  if(P('dau')&&!P('son'))addS('dau',h.dau===1?fr(1,2):fr(2,3));
+  if(A('gdau')&&!P('son')){
+    if(A('gson')){}
+    else if(h.dau>=2){B('gdau','دو یا زیادہ بیٹیاں پورا دو تہائی لے رہی ہیں');}
+    else if(h.dau===1){addS('gdau',fr(1,6));}
+    else{addS('gdau',h.gdau===1?fr(1,2):fr(2,3));}
+  }
+  if(A('fsis')&&!A('fbro')&&!fsA)addS('fsis',h.fsis===1?fr(1,2):fr(2,3));
+  if(A('psis')&&!A('pbro')&&!psA){
+    if(A('fsis')&&h.fsis===1){addS('psis',fr(1,6));}
+    else{addS('psis',h.psis===1?fr(1,2):fr(2,3));}
+  }
+  var uc=(A('ubro')?h.ubro:0)+(A('usis')?h.usis:0);
+  if(uc>0){
+    var ut=uc===1?fr(1,6):fr(1,3);
+    if(A('ubro'))addS('ubro',fmul(ut,fr(h.ubro,uc)));
+    if(A('usis'))addS('usis',fmul(ut,fr(h.usis,uc)));
+  }
+
+  /* عصبہ */
+  var rs=[];
+  if(P('son')){rs=[['son',2],['dau',1]];}
+  else if(A('gson')){rs=[['gson',2],['gdau',1]];}
+  else if(asc){rs=[[asc,1]];}
+  else if(A('fbro')){rs=[['fbro',2],['fsis',1]];}
+  else if(fsA){rs=[['fsis',1]];}
+  else if(A('pbro')){rs=[['pbro',2],['psis',1]];}
+  else if(psA){rs=[['psis',1]];}
+  else{far.forEach(function(k){if(!rs.length&&A(k))rs=[[k,1]];});}
+  rs=rs.filter(function(x){return A(x[0]);});
+
+  var T=fr(0),one=fr(1);
+  for(var k1 in sh)T=fadd(T,sh[k1]);
+  if(fgt(T,one)){
+    for(var k2 in sh)sh[k2]=fdiv(sh[k2],T);
+    res.notes.push('عول ہوا: مقررہ حصوں کا مجموعہ '+fstr(T)+' بن گیا تھا، اس لیے سب حصے اسی تناسب سے کم کیے گئے۔');
+  }else{
+    var R=fsub(one,T);
+    if(!fz(R)){
+      if(rs.length){
+        var W=0;rs.forEach(function(x){W+=x[1]*h[x[0]];});
+        rs.forEach(function(x){addS(x[0],fmul(R,fr(x[1]*h[x[0]],W)));});
+      }else{
+        var ks=Object.keys(sh).filter(function(k){return k!=='husband'&&k!=='wife';});
+        if(ks.length){
+          var S=fr(0);ks.forEach(function(k){S=fadd(S,sh[k]);});
+          ks.forEach(function(k){sh[k]=fadd(sh[k],fmul(R,fdiv(sh[k],S)));});
+          res.notes.push('رد ہوا: بچا ہوا حصہ شریکِ حیات کے علاوہ باقی حصہ داروں میں ان کے حصوں کے تناسب سے بانٹا گیا۔');
+        }else if(Object.keys(sh).length){
+          var sk=Object.keys(sh)[0];sh[sk]=fadd(sh[sk],R);
+          res.notes.push('کوئی اور وارث نہیں، اس لیے باقی حصہ شریکِ حیات کو دیا گیا۔');
+        }else{
+          res.err='اس کیلکولیٹر کے مطابق کوئی وارث نہیں بنتا (ذوی الارحام شامل نہیں)۔';return res;
+        }
+      }
+    }
+  }
+
+  IH_GROUPS.forEach(function(g){g[1].forEach(function(x){
+    var k=x[0];
+    if(sh[k]&&!fz(sh[k])){res.rows.push({k:k,name:x[1],count:h[k],share:sh[k]});}
+    else if(P(k)){res.blocked.push({name:x[1],count:h[k],why:blk[k]||'ترکہ میں کچھ باقی نہ بچا'});}
+  });});
+  return res;
+}
+
+function breakFt(sq){
+  var M=sq/marlaSq,k=Math.floor(M/20+1e-9),mi=Math.floor(M-k*20+1e-9),ft=sq-(k*20+mi)*marlaSq,p=[];
+  if(ft<0.005)ft=0;
+  if(k)p.push(k+' کنال');
+  if(mi||!k)p.push(mi+' مرلہ');
+  p.push(fmt(ft,2)+' فٹ');
+  return p.join(' ');
+}
+function ihAmt(v){
+  var u=ihUnit();
+  if(u==='pkr')return fmt(v,0)+' روپے';
+  var sq=u==='sqft'?v:(u==='marla'?v*marlaSq:v*20*marlaSq);
+  return breakFt(sq)+'<br><small>'+fmt(sq,2)+' مربع فٹ</small>';
+}
+
+function ihBuild(){
+  var h='';
+  IH_GROUPS.forEach(function(g){
+    var items=g[1].filter(function(x){return !(ihMale&&x[0]==='husband')&&!(!ihMale&&x[0]==='wife');});
+    h+='<div class="gh">'+g[0]+'</div>';
+    items.forEach(function(x){
+      h+='<div class="hrow"><span>'+x[1]+'</span><div class="step" dir="ltr">'+
+        '<button type="button" data-k="'+x[0]+'" data-d="-1" aria-label="کم">−</button>'+
+        '<output id="c_'+x[0]+'">'+IH[x[0]]+'</output>'+
+        '<button type="button" data-k="'+x[0]+'" data-d="1" aria-label="زیادہ">+</button></div></div>';
+    });
+  });
+  document.getElementById('iform').innerHTML=h;
+}
+
+function ihShow(){
+  var out=document.getElementById('iresult'),h={};
+  for(var k in IH)h[k]=IH[k];
+  if(ihMale){h.husband=0;}else{h.wife=0;}
+  var r=ihCalc(h,ihMale);
+  if(r.err){out.innerHTML='<p class="hint">'+r.err+'</p>';return;}
+  var est=ihEst(),hasEst=est>0;
+  var html='<table class="itab"><tr><th>وارث</th><th>حصہ</th>'+(hasEst?'<th>ملنے والا</th>':'')+'</tr>';
+  var sum=fr(0);
+  r.rows.forEach(function(x){
+    sum=fadd(sum,x.share);
+    var per=fdiv(x.share,fr(x.count));
+    html+='<tr><td>'+x.name+(x.count>1?' × '+x.count:'')+'</td><td>'+fstr(x.share)+'<br><small>'+fmt(fnum(x.share)*100,2)+'%</small>'+
+      (x.count>1?'<br><small>ہر ایک '+fstr(per)+'</small>':'')+'</td>';
+    if(hasEst){
+      html+='<td>'+ihAmt(est*fnum(x.share))+(x.count>1?'<br><small>ہر ایک:</small> '+ihAmt(est*fnum(per)):'')+'</td>';
+    }
+    html+='</tr>';
+  });
+  html+='<tr class="tot"><td>میزان</td><td>'+fstr(sum)+'</td>'+(hasEst?'<td>'+ihAmt(est)+'</td>':'')+'</tr></table>';
+  if(r.blocked.length){
+    html+='<p class="hint"><b>محروم ورثاء:</b></p><ul class="nlist">'+r.blocked.map(function(b){return '<li>'+b.name+'، '+b.why+'</li>';}).join('')+'</ul>';
+  }
+  if(r.notes.length){
+    html+='<ul class="nlist">'+r.notes.map(function(n){return '<li>'+n+'</li>';}).join('')+'</ul>';
+  }
+  html+='<p class="hint">یہ حساب حنفی فقہ کے مطابق صرف رہنمائی کے لیے ہے۔ ذوی الارحام اور پوتے کی اولاد شامل نہیں۔ حتمی فیصلے کے لیے عالمِ دین یا عدالت سے رجوع کریں۔</p>';
+  out.innerHTML=html;
+}
+
+function openInh(){
+  home.hidden=true;view.hidden=true;document.getElementById('inhview').hidden=false;
+  ihBuild();ihShow();window.scrollTo(0,0);
+}
+document.getElementById('iform').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-k]');if(!b)return;
+  var k=b.getAttribute('data-k');
+  IH[k]=Math.max(0,Math.min(IHMAX[k],IH[k]+parseInt(b.getAttribute('data-d'),10)));
+  document.getElementById('c_'+k).textContent=IH[k];
+  ihShow();
+});
+document.getElementById('ig').addEventListener('input',function(e){
+  ihMale=e.target.value==='m';IH.husband=0;IH.wife=0;ihBuild();ihShow();
+});
+function ihUnit(){var u=document.getElementById('iunit').value;return u==='area'?'sqft':u;}
+function ihEst(){
+  var g=function(id){return parseFloat(document.getElementById(id).value)||0;};
+  if(document.getElementById('iunit').value==='area'){return g('ik')*20*marlaSq+g('im')*marlaSq+g('if');}
+  return g('iest');
+}
+function ihMode(){
+  var a=document.getElementById('iunit').value==='area';
+  document.getElementById('iarea').hidden=!a;
+  document.getElementById('iarea').style.display=a?'grid':'none';
+  document.getElementById('iestl').style.display=a?'none':'flex';
+}
+['iest','ik','im','if'].forEach(function(id){document.getElementById(id).addEventListener('input',ihShow);});
+document.getElementById('iunit').addEventListener('input',function(){ihMode();ihShow();});
+ihMode();
+document.getElementById('iback').onclick=function(){document.getElementById('inhview').hidden=true;home.hidden=false;};
+
+/* ================= رقبہ کیلکولیٹر (جمع، منفی، محفوظ) ================= */
+var RAQ=[],RAQH=[];
+try{RAQH=JSON.parse(localStorage.getItem('raqHist')||'[]');if(!Array.isArray(RAQH))RAQH=[];}catch(e){RAQH=[];}
+function raqNum(id){return parseFloat(document.getElementById(id).value)||0;}
+function raqSq(){return raqNum('rk')*20*marlaSq+raqNum('rm')*marlaSq+raqNum('rf');}
+function raqTotal(items){var t=0;items.forEach(function(x){t+=x.s*x.sq;});return Math.round(t*10000)/10000;}
+function raqAdd(sign){
+  var sq=raqSq();
+  if(!(sq>0))return;
+  RAQ.push({s:sign,sq:sq});
+  ['rk','rm','rf'].forEach(function(id){document.getElementById(id).value='';});
+  raqRender();
+  document.getElementById('rk').focus();
+}
+function raqRender(){
+  var l=document.getElementById('rlist');
+  if(!RAQ.length){l.innerHTML='<p class="hint" style="margin:0">کنال، مرلہ، فٹ لکھ کر جمع یا منفی دبائیں۔ ہر اندراج یہاں فہرست میں آئے گا۔</p>';}
+  else{
+    l.innerHTML=RAQ.map(function(x,i){
+      return '<div class="ent"><span class="sg" style="background:var('+(x.s>0?'--add':'--sub')+')">'+(x.s>0?'+':'−')+'</span>'+
+        '<span class="t">'+breakFt(x.sq)+'<small>'+fmt(x.sq,2)+' مربع فٹ</small></span>'+
+        '<button class="del" type="button" data-i="'+i+'" aria-label="حذف">×</button></div>';
+    }).join('');
+  }
+  var t=raqTotal(RAQ),a=Math.abs(t);
+  document.getElementById('rtot').innerHTML='<div class="l">کل رقبہ</div><div class="b">'+(t<0?'− ':'')+breakFt(a)+'</div>'+
+    '<div class="s">'+fmt(a,2)+' مربع فٹ · '+fmt(a/marlaSq,3)+' مرلہ · '+fmt(a/(20*marlaSq),4)+' کنال</div>';
+  raqHistRender();
+}
+function raqHistRender(){
+  var h=document.getElementById('rh');
+  if(h.hidden)return;
+  if(!RAQH.length){h.innerHTML='<p class="hint" style="margin:0">ابھی کوئی حساب محفوظ نہیں۔</p>';return;}
+  h.innerHTML=RAQH.map(function(x,i){
+    var t=raqTotal(x.items);
+    return '<div class="hh"><span class="t">'+(t<0?'− ':'')+breakFt(Math.abs(t))+'<small>'+x.d+' · '+x.items.length+' اندراج</small></span>'+
+      '<button type="button" data-a="load" data-i="'+i+'">کھولیں</button><button type="button" data-a="del" data-i="'+i+'">حذف</button></div>';
+  }).join('');
+}
+function raqSave(){
+  if(!RAQ.length)return;
+  var d=new Date(),p=function(n){return n<10?'0'+n:n;};
+  RAQH.unshift({d:d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes()),items:RAQ.map(function(x){return{s:x.s,sq:x.sq};})});
+  if(RAQH.length>50)RAQH.length=50;
+  try{localStorage.setItem('raqHist',JSON.stringify(RAQH));}catch(e){}
+  var b=document.getElementById('rsave');b.textContent='محفوظ ہو گیا ✓';
+  setTimeout(function(){b.textContent='محفوظ کریں';},1400);
+  raqHistRender();
+}
+function raqHistStore(){try{localStorage.setItem('raqHist',JSON.stringify(RAQH));}catch(e){}}
+function openRaq(){
+  home.hidden=true;view.hidden=true;document.getElementById('raqview').hidden=false;
+  raqRender();window.scrollTo(0,0);
+}
+document.getElementById('radd').onclick=function(){raqAdd(1);};
+document.getElementById('rsub').onclick=function(){raqAdd(-1);};
+document.getElementById('rclr').onclick=function(){
+  RAQ=[];['rk','rm','rf'].forEach(function(id){document.getElementById(id).value='';});raqRender();
+};
+document.getElementById('rsave').onclick=raqSave;
+document.getElementById('rhist').onclick=function(){
+  var h=document.getElementById('rh');h.hidden=!h.hidden;raqHistRender();
+};
+document.getElementById('rlist').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-i]');if(!b)return;
+  RAQ.splice(parseInt(b.getAttribute('data-i'),10),1);raqRender();
+});
+document.getElementById('rh').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-a]');if(!b)return;
+  var i=parseInt(b.getAttribute('data-i'),10);
+  if(b.getAttribute('data-a')==='load'){RAQ=RAQH[i].items.map(function(x){return{s:x.s,sq:x.sq};});raqRender();window.scrollTo(0,0);}
+  else{RAQH.splice(i,1);raqHistStore();raqHistRender();}
+});
+document.getElementById('rback').onclick=function(){document.getElementById('raqview').hidden=true;home.hidden=false;};
+
+/* ================= رقبہ کنورٹر ================= */
+function cvParts(sq,sizes){
+  var out=[],r=sq;
+  sizes.forEach(function(s){var n=Math.floor(r/s+1e-9);out.push(n);r-=n*s;});
+  if(r<0.005)r=0;
+  out.push(r);
+  return out;
+}
+function cvRender(){
+  var g=function(id){return parseFloat(document.getElementById(id).value)||0;};
+  var M=marlaSq,K=20*M,A=160*M;
+  var sq=g('ca')*A+g('ck')*K+g('cm')*M+g('cf');
+  var cards=[
+    {t:'رقبہ ایکڑ میں',h:215,l:['ایکڑ','کنال','مرلہ','فٹ'],v:cvParts(sq,[A,K,M])},
+    {t:'رقبہ کنال میں',h:140,l:['کنال','مرلہ','فٹ'],v:cvParts(sq,[K,M])},
+    {t:'رقبہ مرلہ میں',h:330,l:['مرلہ','فٹ'],v:cvParts(sq,[M])},
+    {t:'رقبہ فٹ میں',h:25,l:['مربع فٹ'],v:[sq<0.005?0:sq]}
+  ];
+  document.getElementById('cvres').innerHTML=cards.map(function(c){
+    var n=c.l.length;
+    return '<div class="cvc" style="--h:'+c.h+'"><h3>'+c.t+'</h3><div class="obx" style="grid-template-columns:repeat('+n+',1fr)">'+
+      c.l.map(function(lb,i){
+        var val=c.v[i],last=i===n-1;
+        return '<div class="ob"><small>'+lb+'</small><b>'+(last?fmt(val,2):fmt(val,0))+'</b></div>';
+      }).join('')+'</div></div>';
+  }).join('');
+}
+function openCv(){
+  home.hidden=true;view.hidden=true;document.getElementById('cvview').hidden=false;
+  cvRender();window.scrollTo(0,0);
+}
+['ca','ck','cm','cf'].forEach(function(id){document.getElementById(id).addEventListener('input',cvRender);});
+document.getElementById('cclr').onclick=function(){['ca','ck','cm','cf'].forEach(function(id){document.getElementById(id).value='';});cvRender();};
+document.getElementById('cback').onclick=function(){document.getElementById('cvview').hidden=true;home.hidden=false;};
+
+/* ================= کمپاس ================= */
+var CM={shown:0,target:0,got:false,running:false,timer:null,listening:false,drag:null};
+var CM_DIRS=['شمال','شمال مشرق','مشرق','جنوب مشرق','جنوب','جنوب مغرب','مغرب','شمال مغرب'];
+function cmPt(a,r){var t=a*Math.PI/180;return (160+r*Math.sin(t)).toFixed(1)+','+(160-r*Math.cos(t)).toFixed(1);}
+function cmBuild(){
+  var svg=document.getElementById('cmsvg');
+  if(svg.getAttribute('data-built'))return;
+  svg.setAttribute('data-built','1');
+  var s='<defs><radialGradient id="cmhub"><stop offset="0" stop-color="#22344d"/><stop offset="1" stop-color="#0d1624"/></radialGradient></defs>';
+  s+='<circle cx="160" cy="160" r="148" fill="rgba(8,14,24,.35)" stroke="rgba(255,255,255,.75)" stroke-width="3"/>';
+  s+='<g id="cmdial">';
+  for(var i=0;i<180;i++){
+    var a=i*2,mj=a%30===0,md=a%10===0,len=mj?15:(md?10:5);
+    s+='<line x1="160" y1="30" x2="160" y2="'+(30+len)+'" transform="rotate('+a+' 160 160)" stroke="rgba(255,255,255,'+(mj?0.95:(md?0.7:0.4))+')" stroke-width="'+(mj?2.2:1)+'"/>';
+  }
+  for(var n=0;n<360;n+=30){
+    if(n%90===0)continue;
+    s+='<text x="160" y="62" transform="rotate('+n+' 160 160)" text-anchor="middle" font-size="9.5" fill="rgba(255,255,255,.75)">'+n+'</text>';
+  }
+  [['شمال',0],['مشرق',90],['جنوب',180],['مغرب',270]].forEach(function(c){
+    s+='<text x="160" y="67" transform="rotate('+c[1]+' 160 160)" text-anchor="middle" font-size="17" font-weight="700" fill="'+(c[1]===0?'#ff8a73':'#ffffff')+'">'+c[0]+'</text>';
+  });
+  s+='<circle cx="160" cy="160" r="88" fill="none" stroke="rgba(255,255,255,.22)"/><circle cx="160" cy="160" r="70" fill="none" stroke="rgba(255,255,255,.18)"/>';
+  var cols={0:'#e0604a',90:'#d6a24a',180:'#3f9fb0',270:'#5fb184'};
+  for(var k=0;k<8;k++){
+    var ang=k*45,card=ang%90===0,tip=card?82:56,w=card?20:22.5;
+    s+='<polygon points="160,160 '+cmPt(ang-w,18)+' '+cmPt(ang,tip)+' '+cmPt(ang+w,18)+'" fill="'+(card?cols[ang]:'rgba(255,255,255,.3)')+'" fill-opacity="'+(card?0.92:1)+'" stroke="rgba(255,255,255,.7)" stroke-width="1" stroke-linejoin="round"/>';
+  }
+  s+='</g>';
+  s+='<circle cx="160" cy="160" r="15" fill="url(#cmhub)" stroke="#fff" stroke-width="3"/><circle cx="160" cy="160" r="5.5" fill="#fff"/>';
+  s+='<polygon points="150,3 170,3 160,23" fill="#ffd166" stroke="#13202f" stroke-width="1.5" stroke-linejoin="round"/>';
+  svg.innerHTML=s;
+}
+function cmStatus(t){document.getElementById('cmst').textContent=t;}
+function cmHandler(e){
+  var h=null;
+  if(typeof e.webkitCompassHeading==='number'&&!isNaN(e.webkitCompassHeading)){h=e.webkitCompassHeading;}
+  else if((e.type==='deviceorientationabsolute'||e.absolute===true)&&e.alpha!==null&&e.alpha!==undefined){
+    if(typeof e.beta==='number'&&typeof e.gamma==='number'){
+      var r=Math.PI/180,z=e.alpha*r,x=e.beta*r,y=e.gamma*r;
+      var vx=-Math.cos(z)*Math.sin(y)-Math.sin(z)*Math.sin(x)*Math.cos(y);
+      var vy=-Math.sin(z)*Math.sin(y)+Math.cos(z)*Math.sin(x)*Math.cos(y);
+      h=Math.atan2(vx,vy)*180/Math.PI;if(h<0)h+=360;
+    }else{h=(360-e.alpha)%360;}
+  }
+  if(h===null)return;
+  CM.target=h;
+  if(!CM.got){CM.got=true;cmStatus('فون کا سینسر چل رہا ہے');}
+}
+function cmListen(){
+  if(CM.listening)return;
+  CM.listening=true;
+  try{
+    window.addEventListener('deviceorientationabsolute',cmHandler,true);
+    window.addEventListener('deviceorientation',cmHandler,true);
+  }catch(e){}
+}
+function cmStart(){
+  CM.got=false;
+  cmStatus('سینسر تلاش ہو رہا ہے…');
+  var D=window.DeviceOrientationEvent;
+  if(D&&typeof D.requestPermission==='function'){
+    D.requestPermission().then(function(r){if(r==='granted'){cmListen();}else{cmStatus('سینسر کی اجازت نہیں دی گئی۔');}}).catch(function(){cmStatus('سینسر کی اجازت نہیں مل سکی۔');});
+  }else{cmListen();}
+  clearTimeout(CM.timer);
+  CM.timer=setTimeout(function(){
+    if(!CM.got)cmStatus('یہاں فون کا سینسر بلاک ہے۔ ایپ کی فائل کو Chrome میں براہِ راست کھولیں تو کمپاس خود گھومے گا۔ فی الحال ڈائل انگلی سے گھما سکتے ہیں۔');
+  },2500);
+}
+function cmLoop(){
+  if(document.getElementById('cmpview').hidden){CM.running=false;return;}
+  var d=((CM.target-CM.shown+540)%360+360)%360-180;
+  CM.shown+=d*0.2;
+  if(Math.abs(d)<0.05)CM.shown=CM.target;
+  var n=((CM.shown%360)+360)%360;
+  var dial=document.getElementById('cmdial');
+  if(dial)dial.setAttribute('transform','rotate('+(-CM.shown).toFixed(2)+' 160 160)');
+  document.getElementById('cmdeg').textContent=(Math.round(n)%360)+'°';
+  document.getElementById('cmdir').textContent=CM_DIRS[Math.round(n/45)%8];
+  requestAnimationFrame(cmLoop);
+}
+function cmAngle(e){
+  var svg=document.getElementById('cmsvg'),r=svg.getBoundingClientRect();
+  var cx=r.left+r.width/2,cy=r.top+r.height/2;
+  return Math.atan2(e.clientX-cx,-(e.clientY-cy))*180/Math.PI;
+}
+function openCmp(){
+  home.hidden=true;view.hidden=true;document.getElementById('cmpview').hidden=false;
+  cmBuild();
+  if(!CM.running){CM.running=true;cmLoop();}
+  cmStart();
+  window.scrollTo(0,0);
+}
+(function(){
+  var svg=document.getElementById('cmsvg');
+  svg.addEventListener('pointerdown',function(e){
+    if(CM.got)return;
+    CM.drag={a:cmAngle(e),h:CM.target};
+    try{svg.setPointerCapture(e.pointerId);}catch(x){}
+  });
+  svg.addEventListener('pointermove',function(e){
+    if(!CM.drag)return;
+    CM.target=((CM.drag.h-(cmAngle(e)-CM.drag.a))%360+360)%360;
+  });
+  var end=function(){CM.drag=null;};
+  svg.addEventListener('pointerup',end);
+  svg.addEventListener('pointercancel',end);
+})();
+document.getElementById('cmgo').onclick=cmStart;
+document.getElementById('cmback').onclick=function(){document.getElementById('cmpview').hidden=true;home.hidden=false;};
+
+/* ================= عام مددگار ================= */
+function showView(id){
+  document.querySelectorAll('section.view').forEach(function(x){x.hidden=true;});
+  home.hidden=true;
+  document.getElementById(id).hidden=false;
+  window.scrollTo(0,0);
+}
+function areaVal(p){
+  var g=function(t){return parseFloat(document.getElementById(p+t).value)||0;};
+  return g('k')*20*marlaSq+g('m')*marlaSq+g('f');
+}
+function numVal(id){return parseFloat(document.getElementById(id).value)||0;}
+function bindAll(ids,fn){ids.forEach(function(id){document.getElementById(id).addEventListener('input',fn);});}
+function hintP(t){return '<p class="hint" style="margin:0">'+t+'</p>';}
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.gback');if(!b)return;
+  b.closest('section').hidden=true;home.hidden=false;
+});
+
+/* ================= شکلوں کی چھوٹی تصویریں ================= */
+var DG=(function(){
+  function B(x,y,n){return '<circle class="bd" cx="'+x+'" cy="'+y+'" r="8.5"/><text class="bt" x="'+x+'" y="'+y+'">'+n+'</text>';}
+  function T(x,y,t){return '<text class="lb" x="'+x+'" y="'+y+'">'+t+'</text>';}
+  function P(pts){return '<polygon class="sh" points="'+pts+'"/>';}
+  function D(x1,y1,x2,y2){return '<line class="ds" x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'"/>';}
+  function W(b){return '<svg viewBox="0 0 180 124" aria-hidden="true">'+b+'</svg>';}
+  var pent=[],i,a;
+  for(i=0;i<5;i++){a=(-90+72*i)*Math.PI/180;pent.push((90+54*Math.cos(a)).toFixed(1)+','+(66+54*Math.sin(a)).toFixed(1));}
+  return {
+    tri:W(P('90,10 165,106 15,106')+B(51,58,1)+B(129,58,2)+B(90,106,3)),
+    rect:W('<rect class="sh" x="18" y="24" width="120" height="76"/>'+T(78,14,'لمبائی')+T(158,62,'چوڑائی')),
+    sq:W('<rect class="sh" x="40" y="24" width="84" height="84"/>'+T(82,14,'ضلع')+T(148,66,'ضلع')),
+    quad:W(P('15,60 70,8 165,60 105,114')+D(15,60,165,60)+B(40,31,1)+B(120,31,2)+B(138,89,3)+B(58,89,4)+T(90,52,'وتر')),
+    para:W(P('45,24 165,24 135,102 15,102')+D(45,24,45,102)+T(75,114,'قاعدہ')+T(88,63,'اونچائی')),
+    trap:W(P('55,24 125,24 168,102 12,102')+D(125,24,125,102)+B(90,24,1)+B(90,102,2)+T(100,63,'اونچائی')),
+    circ:W('<circle class="sh" cx="90" cy="62" r="48"/>'+D(90,62,138,62)+'<circle class="bd" cx="90" cy="62" r="2.5"/>'+T(114,53,'رداس')),
+    pent:W(P(pent.join(' '))+T(90,118,'ہر ضلع برابر')),
+    rho:W(P('90,8 165,62 90,116 15,62')+D(15,62,165,62)+D(90,8,90,116)+T(130,53,'وتر 1')+T(90,28,'وتر 2')),
+    sec:W('<path class="sh" d="M38 100 L123 100 A85 85 0 0 0 80.5 26.4 Z"/>'+T(80,112,'رداس')+'<path class="ds" d="M58 100 A20 20 0 0 0 48 82.7"/>'+T(80,84,'زاویہ')),
+    oval:W('<ellipse class="sh" cx="90" cy="62" rx="72" ry="44"/>'+D(90,62,162,62)+D(90,62,90,18)+T(128,53,'لمبا رداس')+T(52,40,'چھوٹا رداس')),
+    side:W('<rect class="sh" x="22" y="26" width="108" height="76"/>'+T(76,15,'سائڈ 1 (آپ کی دی ہوئی)')+T(156,64,'سائڈ 2')+T(76,114,'نتیجہ: سائڈ 2'))
+  };
+})();
+
+/* ================= پلاٹ تقسیم ================= */
+function splRender(){
+  var sq=areaVal('sp'),r=document.getElementById('splres'),mode=document.getElementById('spmode').value;
+  document.getElementById('spnl').hidden=mode!=='eq';
+  document.getElementById('sprl').hidden=mode!=='ra';
+  if(!(sq>0)){r.innerHTML=hintP('کل رقبہ کنال، مرلہ، فٹ میں لکھیں۔');return;}
+  var h='';
+  if(mode==='eq'){
+    var n=parseInt(document.getElementById('spn').value,10);
+    if(!(n>=2&&n<=500)){r.innerHTML=hintP('حصوں کی تعداد 2 سے 500 کے درمیان لکھیں۔');return;}
+    var each=sq/n;
+    h='<p class="big">'+breakFt(each)+'</p><table class="t2"><tr><td>ہر حصہ (مربع فٹ)</td><td>'+fmt(each,2)+'</td></tr><tr><td>حصوں کی تعداد</td><td>'+n+'</td></tr><tr><td>کل رقبہ (مربع فٹ)</td><td>'+fmt(sq,2)+'</td></tr></table>';
+  }else{
+    var parts=document.getElementById('spr').value.split(/[^0-9.]+/).map(parseFloat).filter(function(x){return x>0;});
+    if(parts.length<2||parts.length>30){r.innerHTML=hintP('کم از کم دو حصوں کی نسبت لکھیں، جیسے 1:2:3۔');return;}
+    var tot=0;parts.forEach(function(x){tot+=x;});
+    h='<table class="t2">';
+    parts.forEach(function(x,i){var a=sq*x/tot;h+='<tr><td>حصہ '+(i+1)+' (نسبت '+x+')</td><td>'+breakFt(a)+'<small>'+fmt(a,2)+' مربع فٹ</small></td></tr>';});
+    h+='</table>';
+  }
+  r.innerHTML=h;
+}
+function openSpl(){showView('splview');splRender();}
+bindAll(['spk','spm','spf','spmode','spn','spr'],splRender);
+
+/* ================= مثلث + ================= */
+var TR=[];
+function trRender(){
+  var l=document.getElementById('trlist');
+  l.innerHTML=TR.length?TR.map(function(x,i){
+    return '<div class="ent"><span class="sg" style="background:var(--add)">'+(i+1)+'</span><span class="t">'+breakFt(x.sq)+'<small>'+fmt(x.sq,2)+' مربع فٹ</small></span><button class="del" type="button" data-i="'+i+'" aria-label="حذف">×</button></div>';
+  }).join(''):hintP('ہر مثلث کی تین اطراف لکھ کر شامل کریں، فہرست یہاں آئے گی۔');
+  var t=0;TR.forEach(function(x){t+=x.sq;});
+  document.getElementById('trtot').innerHTML='<div class="l">کل رقبہ</div><div class="b">'+breakFt(t)+'</div><div class="s">'+fmt(t,2)+' مربع فٹ · '+fmt(t/marlaSq,3)+' مرلہ · '+fmt(t/(20*marlaSq),4)+' کنال</div>';
+}
+function trAdd(){
+  var k=parseFloat(document.getElementById('tru').value),e=document.getElementById('trerr');
+  var ar=heron(numVal('tra')*k,numVal('trb')*k,numVal('trc')*k);
+  if(ar===null){e.textContent='تینوں اطراف لکھیں، اور دو اطراف کا مجموعہ تیسری سے بڑا ہونا چاہیے۔';return;}
+  e.textContent='';TR.push({sq:ar});
+  ['tra','trb','trc'].forEach(function(id){document.getElementById(id).value='';});
+  trRender();document.getElementById('tra').focus();
+}
+function openTr(){showView('trview');trRender();}
+document.getElementById('tradd').onclick=trAdd;
+document.getElementById('trclr').onclick=function(){TR=[];document.getElementById('trerr').textContent='';trRender();};
+document.getElementById('trlist').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-i]');if(!b)return;
+  TR.splice(parseInt(b.getAttribute('data-i'),10),1);trRender();
+});
+
+/* ================= انتقال فیس ================= */
+var FE_RATES=['fe_stamp','fe_cvt','fe_reg','fe_tax','fe_fix'];
+try{var fsv=JSON.parse(localStorage.getItem('feeRates')||'{}');FE_RATES.forEach(function(id){if(fsv[id]!==undefined&&fsv[id]!=='')document.getElementById(id).value=fsv[id];});}catch(e){}
+function feeRender(){
+  var r=document.getElementById('feeres');
+  var price=numVal('fe_price'),dc=numVal('fe_dc'),base=Math.max(price,dc);
+  try{var o={};FE_RATES.forEach(function(id){o[id]=document.getElementById(id).value;});localStorage.setItem('feeRates',JSON.stringify(o));}catch(e){}
+  if(!(base>0)){r.innerHTML=hintP('جائیداد کی قیمت لکھیں۔');return;}
+  var rows=[['اسٹامپ ڈیوٹی','fe_stamp'],['کیپیٹل ویلیو ٹیکس','fe_cvt'],['رجسٹریشن فیس','fe_reg'],['دیگر ٹیکس','fe_tax']];
+  var tot=0,h='<table class="t2"><tr><td>حساب کی بنیاد</td><td>'+fmt(base,0)+' روپے</td></tr>';
+  rows.forEach(function(x){
+    var p=numVal(x[1]),a=base*p/100;tot+=a;
+    if(p>0)h+='<tr><td>'+x[0]+' ('+fmt(p,2)+'%)</td><td>'+fmt(a,0)+' روپے</td></tr>';
+  });
+  var fx=numVal('fe_fix');tot+=fx;
+  if(fx>0)h+='<tr><td>مقررہ اخراجات</td><td>'+fmt(fx,0)+' روپے</td></tr>';
+  h+='<tr><td><b>کل فیس اور ٹیکس</b></td><td>'+fmt(tot,0)+' روپے</td></tr><tr><td><b>قیمت سمیت کل خرچ</b></td><td>'+fmt(price+tot,0)+' روپے</td></tr></table>';
+  r.innerHTML='<p class="big">'+fmt(tot,0)+' روپے</p>'+h;
+}
+function openFee(){showView('feeview');feeRender();}
+bindAll(['fe_price','fe_dc'].concat(FE_RATES),feeRender);
+
+/* ================= تعمیراتی لاگت ================= */
+function bldRender(){
+  var r=document.getElementById('bldres');
+  var plot=numVal('bd_k')*20*marlaSq+numVal('bd_m')*marlaSq;
+  if(!(plot>0)){r.innerHTML=hintP('پلاٹ کا رقبہ لکھیں۔');return;}
+  var fl=Math.max(1,parseInt(document.getElementById('bd_n').value,10)||1),cov=numVal('bd_c');
+  var covered=plot*cov/100*fl,g=numVal('bd_g'),f=numVal('bd_f');
+  var gc=covered*g,fc=covered*f;
+  var h='<p class="big">'+fmt(gc+fc,0)+' روپے</p><table class="t2">'+
+    '<tr><td>پلاٹ کا رقبہ</td><td>'+breakFt(plot)+'</td></tr>'+
+    '<tr><td>کل ڈھکا ہوا رقبہ (مربع فٹ)</td><td>'+fmt(covered,2)+'</td></tr>'+
+    '<tr><td>ڈھانچے کا خرچ</td><td>'+fmt(gc,0)+' روپے</td></tr>'+
+    '<tr><td>فنشنگ کا خرچ</td><td>'+fmt(fc,0)+' روپے</td></tr>'+
+    '<tr><td><b>کل لاگت</b></td><td>'+fmt(gc+fc,0)+' روپے</td></tr></table>';
+  r.innerHTML=h;
+}
+function openBld(){showView('bldview');bldRender();}
+bindAll(['bd_k','bd_m','bd_n','bd_c','bd_g','bd_f'],bldRender);
+
+/* ================= GPS پیمائش ================= */
+var GP=[];
+function gpMetrics(P){
+  var R=6371000,d=Math.PI/180,lat0=0,lon0=P[0].lon;
+  P.forEach(function(p){lat0+=p.lat;});lat0/=P.length;
+  var xy=P.map(function(p){return [(p.lon-lon0)*d*R*Math.cos(lat0*d),(p.lat-lat0)*d*R];});
+  var a=0,per=0;
+  for(var i=0;i<xy.length;i++){
+    var j=(i+1)%xy.length;
+    a+=xy[i][0]*xy[j][1]-xy[j][0]*xy[i][1];
+    per+=Math.hypot(xy[j][0]-xy[i][0],xy[j][1]-xy[i][1]);
+  }
+  return {sqft:Math.abs(a)/2*SQM,perFt:per*3.28084};
+}
+function gpRender(){
+  var l=document.getElementById('gplist');
+  l.innerHTML=GP.length?GP.map(function(p,i){
+    return '<div class="ent"><span class="sg" style="background:var(--add)">'+(i+1)+'</span><span class="t">نقطہ '+(i+1)+'<small>درستگی تقریباً '+fmt(p.acc,0)+' میٹر</small></span><button class="del" type="button" data-i="'+i+'" aria-label="حذف">×</button></div>';
+  }).join(''):hintP('ابھی کوئی نقطہ نہیں لگا۔');
+  var t=document.getElementById('gptot');
+  if(GP.length<3){t.innerHTML='<div class="l">رقبہ</div><div class="b">کم از کم 3 نقطے</div><div class="s">ابھی '+GP.length+' نقطے ہیں</div>';return;}
+  var m=gpMetrics(GP);
+  t.innerHTML='<div class="l">کل رقبہ</div><div class="b">'+breakFt(m.sqft)+'</div><div class="s">'+fmt(m.sqft,2)+' مربع فٹ · '+fmt(m.sqft/marlaSq,3)+' مرلہ · گھیر '+fmt(m.perFt,1)+' فٹ</div>';
+}
+function gpAdd(){
+  var st=document.getElementById('gpst'),btn=document.getElementById('gpadd');
+  if(!navigator.geolocation){st.textContent='اس براؤزر میں مقام کی سہولت نہیں ہے۔';return;}
+  st.textContent='مقام تلاش ہو رہا ہے…';btn.disabled=true;
+  navigator.geolocation.getCurrentPosition(function(pos){
+    btn.disabled=false;
+    GP.push({lat:pos.coords.latitude,lon:pos.coords.longitude,acc:pos.coords.accuracy||0});
+    st.textContent='نقطہ لگ گیا۔';gpRender();
+  },function(err){
+    btn.disabled=false;
+    st.textContent=err&&err.code===1?'مقام کی اجازت نہیں ملی۔ براؤزر کی سیٹنگ میں اجازت دیں۔':'مقام نہیں مل سکا۔ یہ ٹول Claude کے اندر نہیں چلتا، ایپ کی الگ فائل کو Chrome میں کھولیں۔';
+  },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
+}
+function openGps(){showView('gpview');gpRender();document.getElementById('gpadd').disabled=true;}
+document.getElementById('gpadd').onclick=gpAdd;
+document.getElementById('gpclr').onclick=function(){GP=[];document.getElementById('gpst').textContent='';gpRender();};
+document.getElementById('gplist').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-i]');if(!b)return;
+  GP.splice(parseInt(b.getAttribute('data-i'),10),1);gpRender();
+});
+
+/* ================= فارمولے ================= */
+function fmRender(){
+  var rows=[
+   ['مستطیل','لمبائی × چوڑائی'],['چکور','ضلع × ضلع'],
+   ['مثلث (قاعدہ، اونچائی)','½ × قاعدہ × اونچائی'],
+   ['مثلث (تین اطراف)','√[s(s−a)(s−b)(s−c)]، s = (a+b+c) ÷ 2'],
+   ['متوازی','قاعدہ × عمودی اونچائی'],['ذوزنقہ','½ × (a + b) × اونچائی'],
+   ['رومبس','½ × وتر 1 × وتر 2'],['دائرہ','π × رداس²'],
+   ['سیکٹر','π × رداس² × زاویہ ÷ 360'],['اوول','π × a × b'],
+   ['مخمس (برابر اطراف)','1.7205 × ضلع²'],
+   ['غیر منتظم چار اطراف','دو مثلثوں کا مجموعہ (درمیانی وتر سے)'],
+   ['دوسری سائڈ','(مرلہ سائز × مرلہ) ÷ پہلی سائڈ'],
+   ['1 مرلہ',fmt(marlaSq,2)+' مربع فٹ'],['1 کنال','20 مرلہ = '+fmt(20*marlaSq,2)+' مربع فٹ'],
+   ['1 ایکڑ','8 کنال = 160 مرلہ'],['1 مربع گز','9 مربع فٹ'],['1 مربع میٹر','10.7639 مربع فٹ']
+  ];
+  document.getElementById('fmbox').innerHTML='<table class="t2 fm">'+rows.map(function(x){return '<tr><td>'+x[0]+'</td><td>'+x[1]+'</td></tr>';}).join('')+'</table>';
+}
+function openFm(){showView('fmview');fmRender();}
+
+/* ================= پٹواری ڈائریکٹری ================= */
+/* ڈیٹا: دفتر، نام، عہدہ، فون نمبر (دفتر کے آویزاں کردہ فہرست کے مطابق) */
+var PT=[
+ {o:'تحصیل آفس لیہ',n:'محمد فیاض',r:'تحصیلدار',p:'0300-6864558'},
+ {o:'تحصیل آفس لیہ',n:'ارشاد حسین',r:'نائب تحصیلدار',p:'0300-8764937'},
+ {o:'تحصیل آفس لیہ',n:'اقبال احمد خان',r:'گرداور',p:'0300-8764433'},
+ {o:'تحصیل آفس لیہ',n:'محمد اسلم',r:'گرداور',p:'0301-7852500'},
+ {o:'تحصیل آفس لیہ',n:'محمد زمان جونی',r:'گرداور',p:'0302-8764900'},
+ {o:'تحصیل آفس لیہ',n:'رانا عبدالشکور',r:'گرداور',p:'0302-8762019'},
+ {o:'تحصیل آفس لیہ',n:'محمد شعبان جوتہ',r:'پٹواری',p:'0303-6769904'},
+ {o:'تحصیل آفس لیہ',n:'عبدالستار خان کلاچی',r:'پٹواری',p:'0315-6002074'},
+ {o:'تحصیل آفس لیہ',n:'محمد ابوبکر',r:'پٹواری',p:'0301-2342526'},
+ {o:'تحصیل آفس لیہ',n:'کامران حسین جونی',r:'پٹواری',p:'0301-6958618'},
+ {o:'تحصیل آفس لیہ',n:'الطاف حسین جویہ',r:'پٹواری',p:'0300-6761232'},
+ {o:'تحصیل آفس لیہ',n:'امیر عباس',r:'پٹواری',p:'0301-6849677'},
+ {o:'تحصیل آفس لیہ',n:'عصمت اللہ',r:'پٹواری',p:'0300-9253253'},
+ {o:'تحصیل آفس لیہ',n:'دلشاد منظور',r:'پٹواری',p:'0300-2557354'},
+ {o:'تحصیل آفس لیہ',n:'فیصل جاوید',r:'پٹواری',p:'0304-7744889'},
+ {o:'تحصیل آفس لیہ',n:'فیض محمد',r:'پٹواری',p:'0300-6764388'},
+ {o:'تحصیل آفس لیہ',n:'فرقان علی',r:'پٹواری',p:'0305-5126685'},
+ {o:'تحصیل آفس لیہ',n:'غلام مہدی خان',r:'پٹواری',p:'0300-6769914'},
+ {o:'تحصیل آفس لیہ',n:'غلام مصطفی',r:'پٹواری',p:'0300-8761574'},
+ {o:'تحصیل آفس لیہ',n:'غلام قاسم',r:'پٹواری',p:'0300-6765256'},
+ {o:'تحصیل آفس لیہ',n:'حافظ محمد ذیشان',r:'پٹواری',p:'0300-5789677'},
+ {o:'تحصیل آفس لیہ',n:'حسن اعجاز',r:'پٹواری',p:'0300-6765957'},
+ {o:'تحصیل آفس لیہ',n:'اعجاز حسین بھلر',r:'پٹواری',p:'0307-7844812'},
+ {o:'تحصیل آفس لیہ',n:'عمران الحسن',r:'پٹواری',p:'0300-6765957'},
+ {o:'تحصیل آفس لیہ',n:'محمد فہیم',r:'پٹواری',p:'0307-8663517'},
+ {o:'تحصیل آفس لیہ',n:'خضر حیات',r:'پٹواری',p:'0300-6766944'},
+ {o:'تحصیل آفس لیہ',n:'ملک محمد رفیق',r:'پٹواری',p:'0300-8762262'},
+ {o:'تحصیل آفس لیہ',n:'محسن رضا',r:'پٹواری',p:'0302-4947553'},
+ {o:'تحصیل آفس لیہ',n:'عبدالستار ڈولو',r:'پٹواری',p:'0321-7485769'},
+ {o:'تحصیل آفس لیہ',n:'محمد اکمل الرحمن',r:'پٹواری',p:'0300-6763860'},
+ {o:'تحصیل آفس لیہ',n:'محمد اکرم',r:'پٹواری',p:'0300-8765549'},
+ {o:'تحصیل آفس لیہ',n:'شہزادہ اکبر',r:'پٹواری',p:'0304-6999239'},
+ {o:'تحصیل آفس لیہ',n:'صوبیہ اعجاز',r:'نائب تحصیلدار',p:'0310-4415343'},
+ {o:'تحصیل آفس لیہ',n:'اللہ بخش',r:'گرداور',p:'0301-7510978'},
+ {o:'تحصیل آفس لیہ',n:'معظم علی',r:'گرداور',p:'0300-6762814'},
+ {o:'تحصیل آفس لیہ',n:'محمد سلیم',r:'گرداور',p:'0300-6763133'},
+ {o:'تحصیل آفس لیہ',n:'نعیم اختر',r:'گرداور',p:'0306-1655882'},
+ {o:'تحصیل آفس لیہ',n:'سلطان محمود',r:'گرداور',p:'0300-7677719'},
+ {o:'تحصیل آفس لیہ',n:'مہر محمد ہاشم',r:'پٹواری',p:'0306-6995006'},
+ {o:'تحصیل آفس لیہ',n:'احمد نواز بھلر',r:'پٹواری',p:'0300-6760216'},
+ {o:'تحصیل آفس لیہ',n:'رانا خلیل احمد',r:'پٹواری',p:'0301-6761610'},
+ {o:'تحصیل آفس لیہ',n:'محمد حسین',r:'پٹواری',p:'0300-7641181'},
+ {o:'تحصیل آفس لیہ',n:'محمد ابراہیم',r:'پٹواری',p:'0300-8769696'},
+ {o:'تحصیل آفس لیہ',n:'محمد مسکین',r:'پٹواری',p:'0300-8766826'},
+ {o:'تحصیل آفس لیہ',n:'محمد نواز نول',r:'پٹواری',p:'0300-6554304'},
+ {o:'تحصیل آفس لیہ',n:'محمد رمضان',r:'پٹواری',p:'0300-6766503'},
+ {o:'تحصیل آفس لیہ',n:'محمد رضوان',r:'پٹواری',p:'0303-9302126'},
+ {o:'تحصیل آفس لیہ',n:'عبدالغفور جوتہ',r:'پٹواری',p:'0324-0550119'},
+ {o:'تحصیل آفس لیہ',n:'محمد عمیر خان',r:'پٹواری',p:'0304-9361300'},
+ {o:'تحصیل آفس لیہ',n:'منیر احمد',r:'پٹواری',p:'0306-7306101'},
+ {o:'تحصیل آفس لیہ',n:'نوید حسن شاہ',r:'پٹواری',p:'0300-6767763'},
+ {o:'تحصیل آفس لیہ',n:'نذر عباس',r:'پٹواری',p:'0301-6955928'},
+ {o:'تحصیل آفس لیہ',n:'نور محمد جھورڑ',r:'پٹواری',p:'0307-7844812'},
+ {o:'تحصیل آفس لیہ',n:'قمر رزاق',r:'پٹواری',p:'0301-7540756'},
+ {o:'تحصیل آفس لیہ',n:'محمد آصف',r:'پٹواری',p:'0300-6762125'},
+ {o:'تحصیل آفس لیہ',n:'رانا محمد عامر',r:'پٹواری',p:'0300-8767200'},
+ {o:'تحصیل آفس لیہ',n:'سلامت علی',r:'پٹواری',p:'0306-8761314'},
+ {o:'تحصیل آفس لیہ',n:'شفقت علی',r:'پٹواری',p:'0300-8763594'},
+ {o:'تحصیل آفس لیہ',n:'شہزاد نصیر علوی',r:'پٹواری',p:'0303-6766969'},
+ {o:'تحصیل آفس لیہ',n:'طاہر عباس جوتہ',r:'پٹواری',p:'0304-1528778'},
+ {o:'تحصیل آفس لیہ',n:'طارق حسین جھکھو',r:'پٹواری',p:'0301-3122402'},
+ {o:'تحصیل آفس لیہ',n:'مشکور حسین',r:'پٹواری',p:'0300-8086868'},
+ {o:'تحصیل آفس لیہ',n:'فرہاد حسین',r:'پٹواری',p:'0301-7797988'},
+ {o:'تحصیل آفس لیہ',n:'ریمانی بی بی',r:'پٹواری',p:'0308-9733058'},
+ {o:'تحصیل آفس لیہ',n:'شیخ غلام مرتضیٰ',r:'ہیڈ کلرک',p:'0300-6765715'},
+ {o:'تحصیل آفس لیہ',n:'ظفر اقبال',r:'پی اے',p:'0301-7454444'},
+ {o:'تحصیل آفس لیہ',n:'محمد تنویر',r:'سینئر کلرک',p:'0304-8902340'},
+ {o:'تحصیل آفس لیہ',n:'مہر ظفر اقبال گٹ',r:'واصل باقی نویس',p:'0300-6763099'},
+ {o:'تحصیل آفس لیہ',n:'مہر فتح شیر',r:'اسسٹنٹ ہیڈ کلرک',p:'0300-8762025'},
+ {o:'تحصیل آفس لیہ',n:'محمد حمیر',r:'جونیئر کلرک',p:'0300-6988823'},
+ {o:'تحصیل آفس لیہ',n:'فلک شیر',r:'جونیئر کلرک',p:'0306-6406334'},
+ {o:'تحصیل آفس لیہ',n:'عبدالحفیظ',r:'جونیئر کلرک',p:'0301-6766171'},
+ {o:'تحصیل آفس لیہ',n:'شیخ سکندر حیات',r:'جونیئر کلرک',p:'0308-3408500'},
+ {o:'تحصیل آفس لیہ',n:'ملک محمد وسیم',r:'جونیئر کلرک',p:'0300-6760912'},
+ {o:'تحصیل آفس لیہ',n:'محمد آصف شہانی',r:'جونیئر کلرک',p:'0302-9208255'},
+ {o:'تحصیل آفس لیہ',n:'زین العابدین',r:'جونیئر کلرک',p:'0300-6762435'},
+ {o:'تحصیل آفس لیہ',n:'محمد فاروق درانی',r:'جونیئر کلرک',p:'0307-8661134'},
+ {o:'تحصیل آفس لیہ',n:'غلام فرید',r:'ڈرائیور',p:'0302-7843937'}
+];
+function ptNorm(t){return String(t).toLowerCase().replace(/[\s\-]/g,'');}
+function ptRender(){
+  var q=ptNorm(document.getElementById('ptq').value),o=document.getElementById('pto').value,r=document.getElementById('ptres');
+  if(!o){r.innerHTML=hintP('نام اور نمبر دیکھنے کے لیے پہلے تحصیل منتخب کریں۔');return;}
+  var L=PT.filter(function(x){return x.o===o&&(!q||ptNorm(x.n+x.r+x.o+x.p).indexOf(q)>=0);});
+  if(!L.length){r.innerHTML=hintP('کوئی نتیجہ نہیں ملا۔');return;}
+  r.innerHTML='<p class="hint" style="margin:0 0 6px">'+L.length+' نتائج</p>'+L.map(function(x,i){
+    return '<div class="ent"><span class="t">'+x.n+'<small>'+x.r+' · '+x.o+'</small></span><span dir="ltr" style="font-weight:700">'+x.p+'</span><button class="cpb" type="button" data-p="'+x.p+'">کاپی</button></div>';
+  }).join('');
+}
+document.getElementById('ptres').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-p]');if(!b)return;
+  var p=b.getAttribute('data-p');
+  try{navigator.clipboard.writeText(p).then(function(){b.textContent='✓';setTimeout(function(){b.textContent='کاپی';},1200);},function(){b.textContent=p;});}
+  catch(x){b.textContent=p;}
+});
+function openPt(){showView('ptview');ptRender();}
+bindAll(['ptq','pto'],ptRender);
+
+/* ================= رنگ کا انداز (ڈارک موڈ) ================= */
+(function(){
+  var btn=document.getElementById('theme'),root=document.documentElement;
+  var MOON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5Z"/></svg>';
+  var SUN='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+  function effective(){var t=root.getAttribute('data-theme');if(t)return t;return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}
+  function paint(){btn.innerHTML=effective()==='dark'?SUN:MOON;}
+  try{var st=localStorage.getItem('theme');if(st==='dark'||st==='light')root.setAttribute('data-theme',st);}catch(e){}
+  paint();
+  btn.addEventListener('click',function(){
+    var n=effective()==='dark'?'light':'dark';
+    root.setAttribute('data-theme',n);
+    try{localStorage.setItem('theme',n);}catch(e){}
+    paint();
+  });
+})();
+</script>
+
+
+<script>
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){
+  window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
+}
+</script>
+</body></html>
